@@ -359,6 +359,8 @@ LICENSE_DB: dict[str, tuple[str, str, int, str]] = {
     "CC-BY-SA-4.0":     ("CC BY-SA 4.0",           "Copyleft",       3, "🟠 ShareAlike = viral for content/docs."),
     "CC-BY-NC-4.0":     ("CC BY-NC 4.0",           "Non-Commercial", 5, "🚨 BLOCKS commercial use entirely."),
     "Proprietary":      ("Proprietary",            "Proprietary",    5, "🚨 All rights reserved. No reuse without explicit license."),
+    "EULA":             ("End User License Agreement","Commercial",  1, "✅ Custom EULA — proprietary commercial tool. Integration requires vendor agreement."),
+    "Freemium":         ("Freemium License",        "Freemium",       2, "⚠️ Free trial with paid tiers. Commercial use requires purchasing a license."),
     "UNKNOWN":          ("Unknown License",        "Unknown",        3, "⚠️ License not identified. Legal review required before commercial use."),
 }
 
@@ -386,6 +388,9 @@ LICENSE_KEYWORDS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"Creative Commons.*NonCommercial", re.I),       "CC-BY-NC-4.0"),
     (re.compile(r"Creative Commons.*ShareAlike", re.I),          "CC-BY-SA-4.0"),
     (re.compile(r"Creative Commons", re.I),                      "CC-BY-4.0"),
+    # EULA / Freemium patterns (must come before generic 'All rights reserved')
+    (re.compile(r"End User License Agreement|EULA", re.I),       "EULA"),
+    (re.compile(r"free trial|trial version|试用版|freemium", re.I),"Freemium"),
     (re.compile(r"All rights reserved", re.I),                   "Proprietary"),
 ]
 

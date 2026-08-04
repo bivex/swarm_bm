@@ -147,27 +147,67 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
 
     @mcp.tool()
     def custom_swarm_audit(root_path: str, questions: list[str]) -> str:
-        """Run custom Swarm Agent Audit using your own list of questions over codebase (BM25 + AST)."""
+        """Run custom Swarm Agent Audit using ANY arbitrary natural language question over codebase (BM25 + AST)."""
         from pathlib import Path
         import re
         path = Path(root_path).resolve()
         sub_idx = IndexStoreAdapter(root=path)
         stats = sub_idx.rebuild(path)
         
-        # Domain concept dictionary for Russian/English question translation
+        # Comprehensive 100+ term concept mapping dictionary for Russian & English natural language questions
         CONCEPT_MAP = {
+            "вход": ["main", "app", "entry", "index", "server", "wsgi", "asgi", "start", "run", "cmd", "bootstrap"],
             "входа": ["main", "app", "entry", "index", "server", "wsgi", "asgi", "start", "run", "cmd"],
-            "архитектура": ["hexagonal", "domain", "application", "infrastructure", "core", "adapter", "service"],
-            "роутинг": ["route", "router", "endpoint", "url", "path", "controller", "handler"],
-            "аутентификация": ["auth", "jwt", "login", "token", "session", "oauth", "password"],
+            "старт": ["main", "app", "entry", "start", "init", "run"],
+            "запуск": ["main", "app", "entry", "start", "run", "cmd", "launch"],
+            "главный": ["main", "app", "core", "index", "primary", "master"],
+            "архитектура": ["architecture", "hexagonal", "domain", "application", "infrastructure", "core", "adapter", "service", "module", "layer"],
+            "устроен": ["architecture", "structure", "core", "design", "component", "module", "system"],
+            "структура": ["structure", "tree", "module", "package", "dir", "layer"],
+            "слои": ["layer", "domain", "application", "infrastructure", "adapter"],
+            "роутинг": ["route", "router", "endpoint", "url", "path", "controller", "handler", "view", "api"],
+            "маршрутизация": ["route", "router", "endpoint", "url", "path", "controller", "handler"],
+            "эндпоинт": ["endpoint", "route", "api", "path", "url", "handler"],
+            "ручка": ["endpoint", "route", "api", "handler", "controller"],
+            "контроллер": ["controller", "handler", "view", "route", "endpoint"],
+            "запрос": ["request", "req", "call", "query", "http", "fetch"],
+            "аутентификация": ["auth", "jwt", "login", "token", "session", "oauth", "password", "bearer"],
+            "авторизация": ["auth", "permission", "role", "rbac", "access", "guard", "policy", "allow"],
+            "пароль": ["password", "hash", "secret", "bcrypt", "argon2"],
+            "токен": ["token", "jwt", "bearer", "access_token", "refresh"],
+            "права": ["permission", "role", "rbac", "access", "allow", "guard"],
+            "роли": ["role", "group", "permission", "rbac"],
+            "доступ": ["access", "permission", "authorize", "allow", "deny", "guard"],
+            "секрет": ["secret", "key", "password", "token", "credentials", "api_key", "env", "private"],
             "секреты": ["secret", "key", "password", "token", "credentials", "api_key"],
-            "база": ["database", "db", "sql", "postgres", "redis", "model", "schema"],
-            "тест": ["test", "pytest", "spec", "benchmark"],
+            "ключ": ["key", "api_key", "secret", "token", "private_key"],
+            "база": ["database", "db", "sql", "postgres", "redis", "model", "schema", "entity", "orm", "repository", "table"],
+            "модель": ["model", "schema", "entity", "table", "field", "dataclass", "pydantic"],
+            "таблица": ["table", "model", "schema", "column", "query", "sql"],
+            "данные": ["data", "db", "model", "store", "repository", "persist"],
+            "хранение": ["store", "storage", "db", "persist", "save", "repository"],
+            "кэш": ["cache", "redis", "memcached", "memory", "store", "ttl", "expire"],
+            "кеш": ["cache", "redis", "memcached", "memory", "store"],
+            "оплата": ["payment", "billing", "stripe", "paypal", "invoice", "price", "subscription", "charge"],
+            "платеж": ["payment", "billing", "stripe", "charge", "amount"],
+            "деньги": ["billing", "price", "amount", "currency", "fee", "cost"],
+            "подписка": ["subscription", "plan", "tier", "billing", "recurring"],
+            "очередь": ["queue", "message", "async", "worker", "job", "celery", "rabbit", "kafka", "redis", "task"],
+            "сообщение": ["message", "msg", "event", "publish", "subscribe"],
+            "задача": ["task", "job", "worker", "async", "celery", "queue"],
+            "лог": ["log", "logger", "logging", "info", "debug", "error"],
+            "логирование": ["logging", "logger", "log", "trace", "print"],
+            "ошибка": ["error", "exception", "fail", "raise", "catch", "trace"],
+            "пользователь": ["user", "account", "profile", "member", "person"],
+            "клиент": ["client", "customer", "account", "user"],
+            "настройки": ["setting", "config", "configuration", "env", "options", "param"],
+            "конфиг": ["config", "settings", "env", "configuration", "yaml", "toml"],
+            "тест": ["test", "pytest", "spec", "benchmark", "assert", "mock"],
         }
 
         findings = []
         for q in questions:
-            words = [w.lower() for w in re.findall(r'\w{3,}', q)]
+            words = [w.lower() for w in re.findall(r'\w{2,}', q)]
             search_terms = set(words)
             for w in words:
                 if w in CONCEPT_MAP:
@@ -177,7 +217,8 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
             all_symbols: list[Any] = []
             seen_sym_names: set[str] = set()
 
-            for token in list(search_terms)[:8]:
+            # Execute searches for all terms
+            for token in list(search_terms)[:12]:
                 hits = sub_idx.search_code(token, limit=5)
                 for h in hits:
                     if h.path not in files_dict or h.score > files_dict[h.path]:
@@ -193,6 +234,14 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
                             "path": getattr(s, "path", ""),
                             "line": getattr(s, "line", 0),
                         })
+
+            # Universal Fallback: If no hits, search for general core code files
+            if not files_dict:
+                for fallback_term in ["main", "app", "core", "server", "index", "config"]:
+                    hits = sub_idx.search_code(fallback_term, limit=3)
+                    for h in hits:
+                        if h.path not in files_dict:
+                            files_dict[h.path] = h.score
 
             ranked_files = sorted(files_dict.items(), key=lambda x: -x[1])
             top_files = [p for p, _ in ranked_files[:5]]

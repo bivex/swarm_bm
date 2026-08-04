@@ -27,6 +27,9 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
 
 
+from swarm_mcp.application.senior_audit import SeniorCodebaseAuditEngine
+
+
 def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
     """Inbound Hexagonal Adapter creating standard MCP Server for Swarm BM25 & AgentJobEngine."""
 
@@ -37,6 +40,7 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
     job_engine_adapter = JobEngineAdapter()
     orchestrator = SwarmOrchestratorService(index_adapter, job_engine_adapter)
     auto_router = SwarmAutoRouterService(index_adapter, job_engine_adapter)
+    senior_audit_engine = SeniorCodebaseAuditEngine(index_adapter, job_engine_adapter)
 
     fast_deconstruct_uc = FastDeconstructCodebaseUseCase(orchestrator)
     autoroute_uc = AutoRouteSwarmCodebaseUseCase(auto_router)
@@ -68,6 +72,12 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
     def autoroute_swarm_codebase(root_path: str, max_agents: int = 0) -> str:
         """Dynamically partitions codebase across auto-routed Swarm Agents with memory & IO budgets."""
         res = autoroute_uc.execute(root_path=root_path, max_agents_cap=max_agents)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def run_senior_codebase_audit(root_path: str) -> str:
+        """Executes a 10-Agent Swarm Audit answering 50+ Senior Architectural Questions over the codebase."""
+        res = senior_audit_engine.run_10_agent_senior_audit(Path(root_path))
         return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()

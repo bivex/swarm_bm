@@ -7,8 +7,6 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
-from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
-from swarm_mcp.application.senior_audit import SeniorCodebaseAuditEngine
 
 
 def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
@@ -16,12 +14,8 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
 
     mcp = FastMCP("swarm-auditors-mcp", instructions="Swarm Codebase & Commercial Auditor Suite MCP Server")
 
-    index_adapter = IndexStoreAdapter(root=root_path)
-    job_engine_adapter = JobEngineAdapter()
-    senior_audit_engine = SeniorCodebaseAuditEngine(index_adapter, job_engine_adapter)
-
     # ─────────────────────────────────────────────────────────────────────────
-    # 1. Custom Swarm Agent Questions Auditor
+    # Single MCP Tool: Custom Swarm Agent Questions Auditor
     # ─────────────────────────────────────────────────────────────────────────
     @mcp.tool()
     def custom_swarm_audit(root_path: str, questions: list[str]) -> str:
@@ -148,150 +142,5 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
             "total_questions": len(questions),
             "findings": findings
         }, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 2. Technology Stack Slicer 3.0 Enterprise
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_stack_slicer(root_path: str, project_name: str = "") -> str:
-        """Run Technology Stack Slicer 3.0 Enterprise (250+ techs, 26 categories, 19 manifest parsers)."""
-        from scratch.auditors.stack_slicer import run_detection
-        from pathlib import Path
-        path = Path(root_path).resolve()
-        sub_idx = IndexStoreAdapter(root=path)
-        stats = sub_idx.rebuild(path)
-        techs = run_detection(path, sub_idx)
-        found = [t for t in techs if t.found]
-        return json.dumps({
-            "project_name": project_name or path.name,
-            "total_files": stats.get("total_files", 0),
-            "detected_techs_count": len(found),
-            "detected_technologies": [
-                {
-                    "name": t.name,
-                    "category": t.category,
-                    "license": t.license,
-                    "license_risk": t.license_risk,
-                    "replaceability": t.replaceability,
-                    "swap_note": t.swap_note,
-                    "evidence": t.evidence[:2],
-                } for t in found
-            ]
-        }, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 3. Revenue Maximization Auditor
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_revenue_audit(root_path: str, project_name: str = "") -> str:
-        """Run Revenue Maximization Auditor over codebase (11 commercial blocks, ARR forecast, license risk)."""
-        from scratch.auditors.revenue_audit import run_revenue_audit as exec_revenue_audit
-        from pathlib import Path
-        path = Path(root_path).resolve()
-        res = exec_revenue_audit(path, project_name or path.name)
-        return json.dumps(res, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 4. Security & Compliance Risk Auditor
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_security_compliance_audit(root_path: str, project_name: str = "") -> str:
-        """Run Security & Compliance Risk Auditor (Secrets, OWASP Top 10, SOC2/GDPR/HIPAA/PCI, Security Debt Score)."""
-        from scratch.auditors.security_compliance_audit import scan_codebase_security, calculate_security_debt
-        from pathlib import Path
-        path = Path(root_path).resolve()
-        sub_idx = IndexStoreAdapter(root=path)
-        stats = sub_idx.rebuild(path)
-        rules = scan_codebase_security(path, sub_idx)
-        found = [r for r in rules if r.found]
-        score, grade = calculate_security_debt(rules)
-        return json.dumps({
-            "project_name": project_name or path.name,
-            "security_debt_score": score,
-            "due_diligence_grade": grade,
-            "total_findings": len(found),
-            "findings": [
-                {
-                    "rule_id": r.rule_id,
-                    "title": r.title,
-                    "severity": r.severity,
-                    "penalty": r.penalty,
-                    "evidence": r.evidence_files[:2],
-                    "recommendation": r.recommendation,
-                } for r in found
-            ]
-        }, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 5. Rebrand & White-Label Readiness Auditor
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_whitelabel_readiness_audit(root_path: str, project_name: str = "") -> str:
-        """Run Rebrand & White-Label Readiness Auditor (Hardcoded branding leaks, CSS variables, multi-tenancy, custom domain CNAME)."""
-        from scratch.auditors.whitelabel_readiness_audit import scan_whitelabel_readiness, calculate_whitelabel_score
-        from pathlib import Path
-        path = Path(root_path).resolve()
-        sub_idx = IndexStoreAdapter(root=path)
-        stats = sub_idx.rebuild(path)
-        rules = scan_whitelabel_readiness(path, sub_idx)
-        found = [r for r in rules if r.found]
-        score, grade, effort = calculate_whitelabel_score(rules)
-        return json.dumps({
-            "project_name": project_name or path.name,
-            "whitelabel_score": score,
-            "reseller_grade": grade,
-            "rebrand_effort_estimate": effort,
-            "findings": [
-                {
-                    "metric_id": r.metric_id,
-                    "title": r.title,
-                    "impact": r.impact,
-                    "score_delta": r.score_delta,
-                    "evidence": r.evidence_files[:2],
-                } for r in found
-            ]
-        }, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 6. Architecture & Design Quality Review Auditor
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_architecture_design_audit(root_path: str, project_name: str = "") -> str:
-        """Run Architecture & Design Quality Review Auditor (Modularity, coupling/cohesion, SOLID, Exception hierarchy, Arch Health Index 0-100)."""
-        from scratch.auditors.architecture_design_audit import scan_architecture_design, calculate_architecture_score
-        from pathlib import Path
-        path = Path(root_path).resolve()
-        sub_idx = IndexStoreAdapter(root=path)
-        stats = sub_idx.rebuild(path)
-        rules = scan_architecture_design(path, sub_idx)
-        found = [r for r in rules if r.found]
-        score, grade, risk = calculate_architecture_score(rules)
-        return json.dumps({
-            "project_name": project_name or path.name,
-            "architecture_health_index": score,
-            "maintainability_grade": grade,
-            "refactoring_risk_level": risk,
-            "total_findings": len(found),
-            "findings": [
-                {
-                    "rule_id": r.rule_id,
-                    "category": r.category,
-                    "title": r.title,
-                    "impact": r.impact,
-                    "score_delta": r.score_delta,
-                    "evidence": r.evidence_files[:2],
-                    "recommendation": r.recommendation,
-                } for r in found
-            ]
-        }, indent=2, ensure_ascii=False)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 7. Senior Architecture 15-Agent Audit (150 Questions)
-    # ─────────────────────────────────────────────────────────────────────────
-    @mcp.tool()
-    def run_senior_codebase_audit(root_path: str) -> str:
-        """Executes a 15-Agent Swarm Audit answering 150 Senior Architectural Questions over the codebase."""
-        res = senior_audit_engine.run_senior_audit(Path(root_path))
-        return json.dumps(res, indent=2, ensure_ascii=False)
 
     return mcp

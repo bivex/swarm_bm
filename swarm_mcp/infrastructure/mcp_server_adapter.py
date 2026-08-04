@@ -378,4 +378,34 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
             ]
         }, indent=2, ensure_ascii=False)
 
+    @mcp.tool()
+    def run_architecture_design_audit(root_path: str, project_name: str = "") -> str:
+        """Run Architecture & Design Quality Review Auditor (Modularity, coupling/cohesion, SOLID, Exception hierarchy, Arch Health Index 0-100)."""
+        from scratch.auditors.architecture_design_audit import scan_architecture_design, calculate_architecture_score
+        from pathlib import Path
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        rules = scan_architecture_design(path, sub_idx)
+        found = [r for r in rules if r.found]
+        score, grade, risk = calculate_architecture_score(rules)
+        return json.dumps({
+            "project_name": project_name or path.name,
+            "architecture_health_index": score,
+            "maintainability_grade": grade,
+            "refactoring_risk_level": risk,
+            "total_findings": len(found),
+            "findings": [
+                {
+                    "rule_id": r.rule_id,
+                    "category": r.category,
+                    "title": r.title,
+                    "impact": r.impact,
+                    "score_delta": r.score_delta,
+                    "evidence": r.evidence_files[:2],
+                    "recommendation": r.recommendation,
+                } for r in found
+            ]
+        }, indent=2, ensure_ascii=False)
+
     return mcp

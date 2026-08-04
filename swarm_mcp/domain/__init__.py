@@ -8,7 +8,7 @@ from .models import (
     WorkerState,
 )
 from .ports import IndexPort, JobEnginePort
-from .services import SwarmOrchestratorService
+from .services import SwarmAutoRouterService, SwarmOrchestratorService
 
 __all__ = [
     "DomainAskAnswer",
@@ -21,4 +21,5 @@ __all__ = [
     "IndexPort",
     "JobEnginePort",
     "SwarmOrchestratorService",
+    "SwarmAutoRouterService",
 ]

@@ -11,7 +11,7 @@ from swarm_mcp.domain.models import (
     ResourceBudget,
 )
 from swarm_mcp.domain.ports import IndexPort, JobEnginePort
-from swarm_mcp.domain.services import SwarmOrchestratorService
+from swarm_mcp.domain.services import SwarmAutoRouterService, SwarmOrchestratorService
 
 from .dtos import (
     FastDeconstructRequest,
@@ -128,3 +128,13 @@ class ControlSwarmWorkerUseCase:
             action=action,
             success=success,
         )
+
+
+class AutoRouteSwarmCodebaseUseCase:
+    """Use case to auto-calculate optimal swarm count and partition codebase across agents."""
+
+    def __init__(self, auto_router: SwarmAutoRouterService) -> None:
+        self.auto_router = auto_router
+
+    def execute(self, root_path: str, max_agents_cap: int = 0) -> dict[str, Any]:
+        return self.auto_router.autoroute_codebase_swarm(Path(root_path), max_agents_cap=max_agents_cap)

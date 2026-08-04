@@ -17,11 +17,12 @@ from swarm_mcp.application.use_cases import (
     ControlSwarmWorkerUseCase,
     FastDeconstructCodebaseUseCase,
     GetFileSkeletonUseCase,
+    AutoRouteSwarmCodebaseUseCase,
     GetSymbolContourUseCase,
     SearchCodebaseUseCase,
     SpawnSwarmWorkerUseCase,
 )
-from swarm_mcp.domain.services import SwarmOrchestratorService
+from swarm_mcp.domain.services import SwarmAutoRouterService, SwarmOrchestratorService
 from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
 
@@ -35,8 +36,10 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
     index_adapter = IndexStoreAdapter(root=root_path)
     job_engine_adapter = JobEngineAdapter()
     orchestrator = SwarmOrchestratorService(index_adapter, job_engine_adapter)
+    auto_router = SwarmAutoRouterService(index_adapter, job_engine_adapter)
 
     fast_deconstruct_uc = FastDeconstructCodebaseUseCase(orchestrator)
+    autoroute_uc = AutoRouteSwarmCodebaseUseCase(auto_router)
     search_code_uc = SearchCodebaseUseCase(index_adapter)
     skeleton_uc = GetFileSkeletonUseCase(index_adapter)
     contour_uc = GetSymbolContourUseCase(index_adapter)
@@ -60,6 +63,12 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
             indent=2,
             ensure_ascii=False,
         )
+
+    @mcp.tool()
+    def autoroute_swarm_codebase(root_path: str, max_agents: int = 0) -> str:
+        """Dynamically partitions codebase across auto-routed Swarm Agents with memory & IO budgets."""
+        res = autoroute_uc.execute(root_path=root_path, max_agents_cap=max_agents)
+        return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
     def search_codebase(query: str, content_query: str = "", limit: int = 20) -> str:

@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.dylib
+*.dll
+*.a
+*.o
+*.obj
+
+# C++ Build directories
+out/
+build/
+bin/
+lib/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Cache and temporary files
+.ramdisk_cache.pkl
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# OS / Editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

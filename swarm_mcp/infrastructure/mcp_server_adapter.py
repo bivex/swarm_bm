@@ -146,6 +146,57 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
         )
 
     @mcp.tool()
+    def custom_swarm_audit(root_path: str, questions: list[str]) -> str:
+        """Run custom Swarm Agent Audit using your own list of questions over codebase (BM25 + AST)."""
+        from pathlib import Path
+        import re
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        
+        findings = []
+        for q in questions:
+            # Extract search tokens from question words
+            tokens = [w.lower() for w in re.findall(r'\b[A-Za-z0-9_]{3,}\b', q)]
+            files_dict: dict[str, float] = {}
+            all_symbols: list[Any] = []
+            seen_sym_names: set[str] = set()
+
+            for token in tokens[:5]:  # top search tokens
+                hits = sub_idx.search_code(token, limit=4)
+                for h in hits:
+                    if h.path not in files_dict or h.score > files_dict[h.path]:
+                        files_dict[h.path] = h.score
+                syms = sub_idx.search_symbols(token, limit=3)
+                for s in syms:
+                    nm = getattr(s, "name", str(s))
+                    if nm not in seen_sym_names:
+                        seen_sym_names.add(nm)
+                        all_symbols.append({
+                            "name": nm,
+                            "kind": getattr(s, "kind", ""),
+                            "path": getattr(s, "path", ""),
+                            "line": getattr(s, "line", 0),
+                        })
+
+            ranked_files = sorted(files_dict.items(), key=lambda x: -x[1])
+            top_files = [p for p, _ in ranked_files[:5]]
+            
+            findings.append({
+                "question": q,
+                "matched_files": top_files,
+                "matched_symbols": all_symbols[:5],
+                "status": "✅ FOUND" if top_files or all_symbols else "⚪ UNFOUND"
+            })
+
+        return json.dumps({
+            "root_path": str(path),
+            "total_files": stats.get("total_files", 0),
+            "total_questions": len(questions),
+            "findings": findings
+        }, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
     def control_swarm_worker(worker_id: str, action: str) -> str:
         """Control a Swarm Worker process (freeze, thaw, compress, terminate)."""
         req = WorkerControlRequest(worker_id=worker_id, action=action)

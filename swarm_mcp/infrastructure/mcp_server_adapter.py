@@ -160,16 +160,97 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
         )
 
     @mcp.tool()
-    def get_swarm_stats() -> str:
-        """Get global status of codebase BM25 index and active Swarm Workers."""
-        index_stats = index_adapter.stats()
-        workers = [w.to_dict() for w in job_engine_adapter.list_workers()]
-        return json.dumps(
-            {
-                "index_stats": index_stats,
-                "active_workers": workers,
-            },
-            indent=2,
-        )
+    def run_stack_slicer(root_path: str, project_name: str = "") -> str:
+        """Run Technology Stack Slicer 3.0 (250+ techs, 26 categories, 19 manifest parsers)."""
+        from scratch.auditors.stack_slicer import run_detection, TECH_DB
+        from pathlib import Path
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        techs = run_detection(path, sub_idx)
+        found = [t for t in techs if t.found]
+        return json.dumps({
+            "project_name": project_name or path.name,
+            "total_files": stats.get("total_files", 0),
+            "detected_techs_count": len(found),
+            "detected_technologies": [
+                {
+                    "name": t.name,
+                    "category": t.category,
+                    "license": t.license,
+                    "license_risk": t.license_risk,
+                    "replaceability": t.replaceability,
+                    "swap_note": t.swap_note,
+                    "evidence": t.evidence[:2],
+                } for t in found
+            ]
+        }, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def run_revenue_audit(root_path: str, project_name: str = "") -> str:
+        """Run Revenue Maximization Auditor over codebase (11 commercial blocks, ARR forecast, license risk)."""
+        from scratch.auditors.revenue_audit import analyze_codebase_revenue, calculate_arr_forecast
+        from pathlib import Path
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        findings = analyze_codebase_revenue(path, sub_idx)
+        summary = calculate_arr_forecast(findings, stats.get("total_files", 0))
+        return json.dumps(summary, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def run_security_compliance_audit(root_path: str, project_name: str = "") -> str:
+        """Run Security & Compliance Risk Auditor (Secrets, OWASP Top 10, SOC2/GDPR/HIPAA/PCI, Security Debt Score)."""
+        from scratch.auditors.security_compliance_audit import scan_codebase_security, calculate_security_debt
+        from pathlib import Path
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        rules = scan_codebase_security(path, sub_idx)
+        found = [r for r in rules if r.found]
+        score, grade = calculate_security_debt(rules)
+        return json.dumps({
+            "project_name": project_name or path.name,
+            "security_debt_score": score,
+            "due_diligence_grade": grade,
+            "total_findings": len(found),
+            "findings": [
+                {
+                    "rule_id": r.rule_id,
+                    "title": r.title,
+                    "severity": r.severity,
+                    "penalty": r.penalty,
+                    "evidence": r.evidence_files[:2],
+                    "recommendation": r.recommendation,
+                } for r in found
+            ]
+        }, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def run_whitelabel_readiness_audit(root_path: str, project_name: str = "") -> str:
+        """Run Rebrand & White-Label Readiness Auditor (Hardcoded branding leaks, CSS variables, multi-tenancy, custom domain CNAME)."""
+        from scratch.auditors.whitelabel_readiness_audit import scan_whitelabel_readiness, calculate_whitelabel_score
+        from pathlib import Path
+        path = Path(root_path).resolve()
+        sub_idx = IndexStoreAdapter(root=path)
+        stats = sub_idx.rebuild(path)
+        rules = scan_whitelabel_readiness(path, sub_idx)
+        found = [r for r in rules if r.found]
+        score, grade, effort = calculate_whitelabel_score(rules)
+        return json.dumps({
+            "project_name": project_name or path.name,
+            "whitelabel_score": score,
+            "reseller_grade": grade,
+            "rebrand_effort_estimate": effort,
+            "findings": [
+                {
+                    "metric_id": r.metric_id,
+                    "title": r.title,
+                    "impact": r.impact,
+                    "score_delta": r.score_delta,
+                    "evidence": r.evidence_files[:2],
+                } for r in found
+            ]
+        }, indent=2, ensure_ascii=False)
 
     return mcp

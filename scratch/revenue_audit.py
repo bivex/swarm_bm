@@ -902,7 +902,7 @@ def generate_revenue_report(res: dict, out_path: Path) -> None:
         a("")
         a("| # | Revenue Question | Status | Verified Code Evidence |")
         a("|---|---|---|---|")
-        found_findings = [f for f in tr["findings"] if f["found"]]
+        found_findings = [f for f in tr["findings"] if f["files"]]
         if not found_findings:
             a("| — | *No signals detected in this block* | ⚪ | — |")
         else:

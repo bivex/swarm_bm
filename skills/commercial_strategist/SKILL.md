@@ -28,12 +28,6 @@ Slices the technology stack, checks licenses (GPL/AGPL/BSL/SSPL/MIT), and scores
 PYTHONPATH=bm25_server_FS_for-AI-asking:. python3 scratch/auditors/stack_slicer.py /path/to/project [ProjectName]
 ```
 
-### 3. Telecom & Voice AI M&A Evaluator
-Evaluates legacy telephony, Asterisk/FreeSWITCH, or WebRTC projects for modern AI Voice agent upgrades:
-```bash
-PYTHONPATH=bm25_server_FS_for-AI-asking:. python3 scratch/auditors/telephony_call_audit.py /path/to/project [ProjectName]
-```
-
 ---
 
 ## 📐 The 11 Commercial Strategy Blocks

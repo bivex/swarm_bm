@@ -2,30 +2,32 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║   💎 Revenue Maximization & Commercial Potential Auditor                  ║
-║   10 Commercial Strategy Specialists · BM25+AST · Zero Magic              ║
+║   11 Commercial Strategy Specialists · BM25+AST · Zero Magic              ║
 ║                                                                           ║
 ║   PURPOSE: Not "how is the code structured?" but                          ║
 ║   "Where is the client already getting value we can charge for?"          ║
 ║   and "Where can we embed a commercial product?"                          ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-10 Specialist Blocks:
-  1. What Can Be Monetized
-  2. Volume-Based Billing (ticks/requests/files/users)
-  3. Enterprise Sales Surface (RBAC, SSO, multi-tenant, audit, webhooks)
-  4. Standalone Module & SaaS Extraction
-  5. Where the Client Already Saves Money (ROI proof)
-  6. LTV Maximization & Stickiness Drivers
-  7. Professional Services Opportunities
-  8. Upsell & Average-Check Expansion
-  9. Recurring Cost Drivers (CPU/GPU/network/storage/API)
+11 Specialist Blocks:
+  1.  What Can Be Monetized
+  2.  Volume-Based Billing (ticks/requests/files/users)
+  3.  Enterprise Sales Surface (RBAC, SSO, multi-tenant, audit, webhooks)
+  4.  Standalone Module & SaaS Extraction
+  5.  Where the Client Already Saves Money (ROI proof)
+  6.  LTV Maximization & Stickiness Drivers
+  7.  Professional Services Opportunities
+  8.  Upsell & Average-Check Expansion
+  9.  Recurring Cost Drivers (CPU/GPU/network/storage/API)
   10. Commercial Potential Score & ARR Forecast
+  11. License Risk & Compliance Scanner (MIT/Apache/GPL/AGPL/BSL/SSPL/Commercial)
 
 Usage:
     python3 scratch/revenue_audit.py /path/to/project [ProjectName]
 """
 from __future__ import annotations
 
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -280,6 +282,31 @@ REVENUE_TEAM: list[RevenueSpecialist] = [
         ]
     ),
 
+    # ─── BLOCK 11: License Risk & Compliance Scanner ──────────────────────────
+    RevenueSpecialist(
+        name="Legal Lars", role="License Risk & Compliance Auditor", emoji="⚖️",
+        block="BLOCK 11 — License Risk & Compliance Scanner",
+        focus="Detect GPL/AGPL viral clauses, BSL/SSPL restrictions, patent grants, and commercial use blockers",
+        questions=[
+            ("Есть ли в зависимостях GPL/AGPL лицензии, которые 'заражают' коммерческий продукт?",
+             ["gpl", "agpl", "gnu", "copyleft", "viral", "general_public"], 5),
+            ("Используются ли BSL/SSPL/Commons Clause ограничения (Source Available, не Open Source)?",
+             ["bsl", "sspl", "commons_clause", "server_side", "source_available", "elastic"], 5),
+            ("Есть ли патентные гранты или Patent Retaliation Clauses в лицензиях?",
+             ["patent", "grant", "retaliation", "claim", "intellectual_property", "ip"], 4),
+            ("Есть ли Attribution-обязательства (указание автора в коммерческом продукте)?",
+             ["attribution", "copyright", "notice", "credit", "author", "retain", "preserve"], 3),
+            ("Разрешает ли лицензия коммерческое использование без ограничений (MIT/Apache/BSD)?",
+             ["mit", "apache", "bsd", "permissive", "commercial", "isc", "unlicense", "public_domain"], 3),
+            ("Есть ли CLA (Contributor License Agreement) — кто владеет IP вкладов?",
+             ["cla", "contributor", "agreement", "assignment", "transfer", "copyright_assignment"], 4),
+            ("Есть ли зависимости с двойным лицензированием (Open Core / Commercial Dual License)?",
+             ["dual_license", "commercial_license", "enterprise_edition", "open_core", "ee", "ce"], 5),
+            ("Каков общий лицензионный риск для встраивания в закрытый коммерческий продукт?",
+             ["license", "LICENSE", "COPYING", "NOTICE", "spdx", "identifier", "copyright"], 5),
+        ]
+    ),
+
     # ─── BLOCK 10: Commercial Potential Score & ARR Forecast ────────────────
     RevenueSpecialist(
         name="Ivan Monetizer", role="Revenue Potential Scorer & ARR Forecaster", emoji="🏆",
@@ -305,6 +332,203 @@ REVENUE_TEAM: list[RevenueSpecialist] = [
         ]
     ),
 ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# License Scanner (factual file-level, no BM25 — reads actual license files)
+# ─────────────────────────────────────────────────────────────────────────────
+# SPDX license → (display name, category, commercial_risk 0-5, description)
+LICENSE_DB: dict[str, tuple[str, str, int, str]] = {
+    "MIT":              ("MIT License",            "Permissive",     0, "✅ Fully commercial-friendly. No restrictions."),
+    "Apache-2.0":       ("Apache 2.0",             "Permissive",     0, "✅ Commercial-friendly + explicit patent grant."),
+    "BSD-2-Clause":     ("BSD 2-Clause",           "Permissive",     0, "✅ Commercial-friendly. Minimal obligations."),
+    "BSD-3-Clause":     ("BSD 3-Clause",           "Permissive",     0, "✅ Commercial-friendly. No-endorsement clause."),
+    "ISC":              ("ISC License",            "Permissive",     0, "✅ MIT-equivalent. Commercial-friendly."),
+    "Unlicense":        ("The Unlicense",          "Public Domain",  0, "✅ Public domain. No restrictions whatsoever."),
+    "CC0-1.0":          ("CC0 1.0 Universal",      "Public Domain",  0, "✅ Public domain dedication."),
+    "MPL-2.0":          ("Mozilla Public License", "Weak Copyleft",  1, "⚠️ File-level copyleft. Modified MPL files must stay open, rest can be proprietary."),
+    "LGPL-2.0":         ("LGPL 2.0",               "Weak Copyleft",  2, "⚠️ Library use OK if dynamically linked. Static link triggers full copyleft."),
+    "LGPL-2.1":         ("LGPL 2.1",               "Weak Copyleft",  2, "⚠️ Library use OK if dynamically linked. Static link triggers full copyleft."),
+    "LGPL-3.0":         ("LGPL 3.0",               "Weak Copyleft",  2, "⚠️ Stronger than LGPL-2.1. Requires installation instructions for embedded devices."),
+    "GPL-2.0":          ("GPL 2.0",                "Strong Copyleft",4, "🔴 VIRAL: Linking GPL code into commercial product forces entire product to GPL."),
+    "GPL-3.0":          ("GPL 3.0",                "Strong Copyleft",4, "🔴 VIRAL: Full copyleft + patent retaliation clause. Commercial use requires full source disclosure."),
+    "AGPL-3.0":         ("AGPL 3.0",               "Network Copyleft",5,"🚨 CRITICAL: Strongest copyleft. SaaS/API use triggers source disclosure obligation."),
+    "BSL-1.1":          ("Business Source License","Source Available",3,"🟠 NOT Open Source. Cannot use for competing commercial SaaS for 4 years."),
+    "SSPL-1.0":         ("Server Side Public License","Source Available",4,"🔴 Mongo-created. SaaS use requires open-sourcing your ENTIRE stack."),
+    "CC-BY-4.0":        ("CC BY 4.0",              "Permissive",     1, "⚠️ Attribution required. Not OSI-approved for code, but OK for assets/data."),
+    "CC-BY-SA-4.0":     ("CC BY-SA 4.0",           "Copyleft",       3, "🟠 ShareAlike = viral for content/docs."),
+    "CC-BY-NC-4.0":     ("CC BY-NC 4.0",           "Non-Commercial", 5, "🚨 BLOCKS commercial use entirely."),
+    "Proprietary":      ("Proprietary",            "Proprietary",    5, "🚨 All rights reserved. No reuse without explicit license."),
+    "UNKNOWN":          ("Unknown License",        "Unknown",        3, "⚠️ License not identified. Legal review required before commercial use."),
+}
+
+SPDX_PATTERN = re.compile(
+    r"SPDX-License-Identifier:\s*([A-Za-z0-9.\-+]+)",
+    re.IGNORECASE
+)
+
+LICENSE_KEYWORDS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"GNU AFFERO GENERAL PUBLIC LICENSE", re.I),     "AGPL-3.0"),
+    (re.compile(r"GNU GENERAL PUBLIC LICENSE.*Version 3", re.I), "GPL-3.0"),
+    (re.compile(r"GNU GENERAL PUBLIC LICENSE.*Version 2", re.I), "GPL-2.0"),
+    (re.compile(r"GNU LESSER GENERAL PUBLIC.*Version 3", re.I),  "LGPL-3.0"),
+    (re.compile(r"GNU LESSER GENERAL PUBLIC.*Version 2\.1", re.I),"LGPL-2.1"),
+    (re.compile(r"GNU LESSER GENERAL PUBLIC.*Version 2", re.I),  "LGPL-2.0"),
+    (re.compile(r"Mozilla Public License.*2\.0", re.I),          "MPL-2.0"),
+    (re.compile(r"Apache License.*Version 2\.0", re.I),          "Apache-2.0"),
+    (re.compile(r"MIT License|Permission is hereby granted.*free of charge", re.I), "MIT"),
+    (re.compile(r"BSD 2-Clause", re.I),                          "BSD-2-Clause"),
+    (re.compile(r"BSD 3-Clause|Redistributions of source code must retain", re.I), "BSD-3-Clause"),
+    (re.compile(r"ISC License|ISC", re.I),                       "ISC"),
+    (re.compile(r"Business Source License|Change Date", re.I),   "BSL-1.1"),
+    (re.compile(r"Server Side Public License", re.I),            "SSPL-1.0"),
+    (re.compile(r"This is free and unencumbered software.*public domain", re.I), "Unlicense"),
+    (re.compile(r"Creative Commons.*NonCommercial", re.I),       "CC-BY-NC-4.0"),
+    (re.compile(r"Creative Commons.*ShareAlike", re.I),          "CC-BY-SA-4.0"),
+    (re.compile(r"Creative Commons", re.I),                      "CC-BY-4.0"),
+    (re.compile(r"All rights reserved", re.I),                   "Proprietary"),
+]
+
+
+def detect_spdx(text: str) -> str | None:
+    m = SPDX_PATTERN.search(text)
+    return m.group(1).strip() if m else None
+
+
+def classify_license_text(text: str) -> str:
+    spdx = detect_spdx(text)
+    if spdx and spdx in LICENSE_DB:
+        return spdx
+    for pattern, spdx_id in LICENSE_KEYWORDS:
+        if pattern.search(text):
+            return spdx_id
+    return "UNKNOWN"
+
+
+def extract_dep_licenses(repo_path: Path) -> list[tuple[str, str]]:
+    """Extract declared licenses from dependency manifests."""
+    deps: list[tuple[str, str]] = []
+
+    # pyproject.toml
+    for f in repo_path.rglob("pyproject.toml"):
+        try:
+            txt = f.read_text(errors="ignore")
+            for m in re.finditer(r'license\s*=\s*["\{]([^"\}]+)["\}]', txt, re.I):
+                deps.append((f.parent.name or "root", m.group(1).strip()))
+        except Exception:
+            pass
+
+    # package.json
+    for f in repo_path.rglob("package.json"):
+        if "node_modules" in str(f):
+            continue
+        try:
+            txt = f.read_text(errors="ignore")
+            m = re.search(r'"license"\s*:\s*"([^"]+)"', txt)
+            if m:
+                deps.append((f.parent.name or "root", m.group(1).strip()))
+        except Exception:
+            pass
+
+    # Cargo.toml
+    for f in repo_path.rglob("Cargo.toml"):
+        try:
+            txt = f.read_text(errors="ignore")
+            m = re.search(r'license\s*=\s*"([^"]+)"', txt)
+            if m:
+                deps.append((f.parent.name or "root", m.group(1).strip()))
+        except Exception:
+            pass
+
+    # go.mod — no license field, skip
+    return deps[:30]  # cap at 30
+
+
+def scan_licenses_factual(repo_path: Path) -> dict:
+    """100% factual file-level license scan — reads real files."""
+    print(f"\n  ⚖️  [Legal Lars · License Risk Scanner]")
+    print(f"     BLOCK 11 — License Risk & Compliance Scanner")
+
+    # Step 1: Find all LICENSE/COPYING/NOTICE files
+    license_files: list[Path] = []
+    for pattern in ["LICENSE*", "LICENCE*", "COPYING*", "NOTICE*"]:
+        license_files.extend(repo_path.rglob(pattern))
+    license_files = [f for f in license_files if f.is_file()][:20]
+
+    project_licenses: list[dict] = []
+    seen_spdx: set[str] = set()
+
+    for lf in license_files:
+        try:
+            text = lf.read_text(errors="ignore")[:4000]
+        except Exception:
+            continue
+        spdx = classify_license_text(text)
+        rel = str(lf.relative_to(repo_path))
+        if spdx not in seen_spdx:
+            seen_spdx.add(spdx)
+        info = LICENSE_DB.get(spdx, LICENSE_DB["UNKNOWN"])
+        project_licenses.append({
+            "file": rel,
+            "spdx": spdx,
+            "name": info[0],
+            "category": info[1],
+            "risk": info[2],
+            "verdict": info[3],
+        })
+        risk_icon = ["✅","⚠️","⚠️","🟠","🔴","🚨"][min(info[2], 5)]
+        print(f"     {risk_icon} {rel:<45} → {spdx} ({info[1]})")
+
+    # Step 2: Scan SPDX identifiers in source headers (first 512 bytes per file)
+    spdx_in_code: dict[str, int] = {}
+    for src in repo_path.rglob("*"):
+        if not src.is_file():
+            continue
+        if src.suffix not in (".py",".rs",".go",".ts",".js",".c",".h",".cpp",".java",".kt"):
+            continue
+        try:
+            head = src.read_bytes()[:512].decode(errors="ignore")
+        except Exception:
+            continue
+        spdx = detect_spdx(head)
+        if spdx:
+            spdx_in_code[spdx] = spdx_in_code.get(spdx, 0) + 1
+
+    # Step 3: Dependency manifest licenses
+    dep_licenses = extract_dep_licenses(repo_path)
+
+    # Step 4: Compute overall risk
+    all_risks = [lic["risk"] for lic in project_licenses]
+    dep_risks: list[int] = []
+    for _, lic_str in dep_licenses:
+        # Normalize common SPDX variants
+        key = lic_str.upper().replace(" ", "-")
+        matched = next((k for k in LICENSE_DB if k.upper() == key), None)
+        if matched:
+            dep_risks.append(LICENSE_DB[matched][2])
+
+    max_risk = max(all_risks + dep_risks) if (all_risks or dep_risks) else 0
+    risk_label = [
+        "✅ LOW — Commercial-Friendly",
+        "⚠️  LOW-MEDIUM — Minor Obligations",
+        "⚠️  MEDIUM — Review Required",
+        "🟠 MEDIUM-HIGH — Legal Consultation Advised",
+        "🔴 HIGH — Viral Copyleft Risk",
+        "🚨 CRITICAL — Blocks Commercial Use",
+    ][min(max_risk, 5)]
+
+    print(f"     Coverage: {len(license_files)} license files scanned, "
+          f"{sum(spdx_in_code.values())} SPDX headers found")
+    print(f"     Overall Risk: {risk_label}\n")
+
+    return {
+        "project_licenses": project_licenses,
+        "spdx_in_code": spdx_in_code,
+        "dep_licenses": dep_licenses,
+        "max_risk": max_risk,
+        "risk_label": risk_label,
+        "license_files_count": len(license_files),
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -377,6 +601,9 @@ def run_revenue_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
     t_idx = time.perf_counter()
     stats = idx.rebuild(repo_path)
     total_files = stats.get("total_files", 0)
+
+    # Run factual license scan (reads real files, not BM25)
+    license_scan = scan_licenses_factual(repo_path)
     print(f"  [+] Index ready: {total_files:,} files in {(time.perf_counter()-t_idx)*1000:.0f}ms\n")
 
     team_results: list[dict] = []
@@ -487,6 +714,7 @@ def run_revenue_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
     )
 
     return {
+        "license_scan": license_scan,
         "project": project_name,
         "repo_path": str(repo_path),
         "date": str(date.today()),
@@ -590,6 +818,62 @@ def generate_revenue_report(res: dict, out_path: Path) -> None:
     a(f"| Hybrid (Seat + Usage) | Mixed SMB + Enterprise | ${arr_l*2:,} – ${arr_h*4:,} |")
     a("")
 
+    # ── License Section ──────────────────────────────────────────────────────
+    ls = res["license_scan"]
+    a("## ⚖️ License Risk & Compliance Scan")
+    a("")
+    a(f"> **Overall License Risk: {ls['risk_label']}** · "
+      f"{ls['license_files_count']} license files scanned · "
+      f"{sum(ls['spdx_in_code'].values())} SPDX headers in source code")
+    a("")
+
+    if ls["project_licenses"]:
+        a("### 📄 Project License Files")
+        a("")
+        a("| License File | SPDX ID | Category | Risk | Commercial Verdict |")
+        a("|---|---|---|---|---|")
+        risk_icons = ["✅","⚠️","⚠️","🟠","🔴","🚨"]
+        for lic in ls["project_licenses"]:
+            icon = risk_icons[min(lic["risk"], 5)]
+            a(f"| `{lic['file']}` | **{lic['spdx']}** | {lic['category']} | {icon} {lic['risk']}/5 | {lic['verdict']} |")
+        a("")
+
+    if ls["spdx_in_code"]:
+        a("### 🏷️ SPDX License Identifiers Found in Source Headers")
+        a("")
+        a("| SPDX ID | Files | Category | Risk |")
+        a("|---|---|---|---|")
+        for spdx_id, count in sorted(ls["spdx_in_code"].items(), key=lambda x: -x[1]):
+            info = LICENSE_DB.get(spdx_id, LICENSE_DB["UNKNOWN"])
+            icon = risk_icons[min(info[2], 5)]
+            a(f"| **{spdx_id}** | {count} files | {info[1]} | {icon} {info[2]}/5 |")
+        a("")
+
+    if ls["dep_licenses"]:
+        a("### 📦 Dependency Manifest License Declarations")
+        a("")
+        a("| Package / Module | Declared License |")
+        a("|---|---|")
+        for pkg, lic in ls["dep_licenses"][:15]:
+            a(f"| `{pkg}` | `{lic}` |")
+        a("")
+
+    # Commercial use decision
+    risk = ls["max_risk"]
+    a("### 💼 Commercial Use Decision")
+    a("")
+    if risk == 0:
+        a("> ✅ **CLEAR FOR COMMERCIAL USE** — All detected licenses are permissive. No legal barriers.")
+    elif risk <= 2:
+        a("> ⚠️ **MOSTLY CLEAR** — Weak copyleft detected. Ensure dynamic linking or attribution compliance.")
+    elif risk == 3:
+        a("> 🟠 **LEGAL REVIEW RECOMMENDED** — Source-available or ShareAlike licenses present. Consult legal before commercial embedding.")
+    elif risk == 4:
+        a("> 🔴 **HIGH RISK** — Strong copyleft (GPL) or SSPL detected. Commercial embedding may trigger full source disclosure obligation.")
+    else:
+        a("> 🚨 **BLOCKS COMMERCIAL USE** — AGPL, SSPL, Non-Commercial, or Proprietary license detected. Cannot embed without explicit commercial license from rights-holder.")
+    a("")
+
     # Top quick wins
     a("## ⚡ Top Quick Wins (Highest ARR Impact / Lowest Dev Cost)")
     a("")
@@ -651,7 +935,8 @@ if __name__ == "__main__":
     generate_revenue_report(res, out)
 
     # Final summary banner
-    f = res["arr_forecast"]
+    f  = res["arr_forecast"]
+    ls = res["license_scan"]
     print(f"\n{'═'*75}")
     print(f"  💎 REVENUE AUDIT COMPLETE: {res['project']}")
     print(f"{'═'*75}")
@@ -664,4 +949,6 @@ if __name__ == "__main__":
     print(f"  Per-User Score    : {res['per_user_score']}")
     print(f"  Per-Request Score : {res['per_req_score']}")
     print(f"  Enterprise Score  : {res['enterprise_score']}")
+    print(f"  License Risk      : {ls['risk_label']}")
+    print(f"  License Files     : {ls['license_files_count']} found · SPDX headers: {sum(ls['spdx_in_code'].values())}")
     print(f"{'═'*75}")

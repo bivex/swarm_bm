@@ -1,0 +1,7 @@
+[submodule "bm25_server_FS_for-AI-asking"]
+	path = bm25_server_FS_for-AI-asking
+	url = https://github.com/bivex/bm25_server_FS_for-AI-asking
+[submodule "JobObjects_RD"]
+	path = JobObjects_RD
+	url = https://github.com/bivex/JobObjects_RD
+	branch = f/macos

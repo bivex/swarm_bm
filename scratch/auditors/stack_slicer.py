@@ -43,7 +43,7 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Any
 
-root_dir = Path(__file__).resolve().parents[1]
+root_dir = next(p for p in Path(__file__).resolve().parents if (p / "bm25_server_FS_for-AI-asking").exists())
 sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(root_dir / "bm25_server_FS_for-AI-asking"))
 

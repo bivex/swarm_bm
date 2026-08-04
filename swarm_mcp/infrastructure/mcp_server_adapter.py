@@ -154,16 +154,31 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
         sub_idx = IndexStoreAdapter(root=path)
         stats = sub_idx.rebuild(path)
         
+        # Domain concept dictionary for Russian/English question translation
+        CONCEPT_MAP = {
+            "входа": ["main", "app", "entry", "index", "server", "wsgi", "asgi", "start", "run", "cmd"],
+            "архитектура": ["hexagonal", "domain", "application", "infrastructure", "core", "adapter", "service"],
+            "роутинг": ["route", "router", "endpoint", "url", "path", "controller", "handler"],
+            "аутентификация": ["auth", "jwt", "login", "token", "session", "oauth", "password"],
+            "секреты": ["secret", "key", "password", "token", "credentials", "api_key"],
+            "база": ["database", "db", "sql", "postgres", "redis", "model", "schema"],
+            "тест": ["test", "pytest", "spec", "benchmark"],
+        }
+
         findings = []
         for q in questions:
-            # Extract search tokens from question words
-            tokens = [w.lower() for w in re.findall(r'\b[A-Za-z0-9_]{3,}\b', q)]
+            words = [w.lower() for w in re.findall(r'\w{3,}', q)]
+            search_terms = set(words)
+            for w in words:
+                if w in CONCEPT_MAP:
+                    search_terms.update(CONCEPT_MAP[w])
+
             files_dict: dict[str, float] = {}
             all_symbols: list[Any] = []
             seen_sym_names: set[str] = set()
 
-            for token in tokens[:5]:  # top search tokens
-                hits = sub_idx.search_code(token, limit=4)
+            for token in list(search_terms)[:8]:
+                hits = sub_idx.search_code(token, limit=5)
                 for h in hits:
                     if h.path not in files_dict or h.score > files_dict[h.path]:
                         files_dict[h.path] = h.score

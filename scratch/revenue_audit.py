@@ -902,10 +902,14 @@ def generate_revenue_report(res: dict, out_path: Path) -> None:
         a("")
         a("| # | Revenue Question | Status | Verified Code Evidence |")
         a("|---|---|---|---|")
-        for i, fnd in enumerate(tr["findings"], 1):
-            st = fnd["status"]
-            fstr = ", ".join(fnd["files"][:2]) if fnd["files"] else "—"
-            a(f"| {i} | {fnd['question'][:65]} | {st} | `{fstr[:45]}` |")
+        found_findings = [f for f in tr["findings"] if f["found"]]
+        if not found_findings:
+            a("| — | *No signals detected in this block* | ⚪ | — |")
+        else:
+            for i, fnd in enumerate(found_findings, 1):
+                st = fnd["status"]
+                fstr = ", ".join(fnd["files"][:2]) if fnd["files"] else "—"
+                a(f"| {i} | {fnd['question'][:65]} | {st} | `{fstr[:45]}` |")
         a("")
 
     a("---")

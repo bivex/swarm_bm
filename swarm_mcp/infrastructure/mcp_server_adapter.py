@@ -189,14 +189,11 @@ def create_swarm_mcp_server(root_path: Path | None = None) -> FastMCP:
     @mcp.tool()
     def run_revenue_audit(root_path: str, project_name: str = "") -> str:
         """Run Revenue Maximization Auditor over codebase (11 commercial blocks, ARR forecast, license risk)."""
-        from scratch.auditors.revenue_audit import analyze_codebase_revenue, calculate_arr_forecast
+        from scratch.auditors.revenue_audit import run_revenue_audit as exec_revenue_audit
         from pathlib import Path
         path = Path(root_path).resolve()
-        sub_idx = IndexStoreAdapter(root=path)
-        stats = sub_idx.rebuild(path)
-        findings = analyze_codebase_revenue(path, sub_idx)
-        summary = calculate_arr_forecast(findings, stats.get("total_files", 0))
-        return json.dumps(summary, indent=2, ensure_ascii=False)
+        res = exec_revenue_audit(path, project_name or path.name)
+        return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
     def run_security_compliance_audit(root_path: str, project_name: str = "") -> str:

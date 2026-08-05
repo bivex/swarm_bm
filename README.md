@@ -43,6 +43,11 @@
 | 🏭 **ISA/IEC 62443** | Промышленная безопасность SCADA/OT (Зонирование air-gap, OPC UA/Modbus, PLC watchdogs) | `scratch/auditors/iso/iso_62443_industrial_security_audit.py` |
 | 📌 **ISO 21500** | Управление проектами и Governance (Issue templates, ADR записи в `docs/adr/`, Roadmap) | `scratch/auditors/iso/iso_21500_project_governance_audit.py` |
 | 🧪 **ISO/IEC/IEEE 29119** | Стандарты тестирования ПО (Unit test automation, fixtures `conftest.py`, Playwright E2E) | `scratch/auditors/iso/iso_29119_software_testing_audit.py` |
+| 🛡️ **ISO/IEC 27034** | Безопасность приложений AppSec (ASC абстракции, SAST сканирование CodeQL/Semgrep, STRIDE) | `scratch/auditors/iso/iso_27034_application_security_audit.py` |
+| 🚨 **ISO/IEC 27035** | Управление инцидентами ИБ (Playbooks `INCIDENT_RESPONSE.md`, Sentry/PagerDuty, SIEM) | `scratch/auditors/iso/iso_27035_incident_management_audit.py` |
+| 🔗 **ISO/IEC 27036** | Безопасность цепочки поставок ПО (Фиксация `lockfile`, реестр вендоров, проверка уязвимостей) | `scratch/auditors/iso/iso_27036_supplier_relationships_audit.py` |
+| 🤖⚙️ **ISO/IEC 23053** | Фреймворк систем машинного обучения (MLflow/DVC реестр моделей, Feast lineage, seed determinism) | `scratch/auditors/iso/iso_23053_ai_ml_framework_audit.py` |
+| 📊 **ISO 8000** | Качество мастер-данных MDM (Валидация Pydantic, дедупликация, нормализация, Foreign Keys) | `scratch/auditors/iso/iso_8000_data_quality_audit.py` |
 
 ---
 

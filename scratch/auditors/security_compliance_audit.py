@@ -36,6 +36,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class SecurityFinding:
+    """Documentation for SecurityFinding."""
     category: str           # SECRETS / OWASP / COMPLIANCE / DEPENDENCY
     rule_id: str            # SEC-001, OWASP-A03, SOC2-01, etc.
     title: str
@@ -279,6 +280,7 @@ def calculate_security_debt(rules: list[SecurityFinding]) -> tuple[int, str]:
 
 
 def build_report(project: str, root: Path, rules: list[SecurityFinding],
+    """Documentation for build_report."""
                  stats: dict, elapsed: float, report_path: Path) -> str:
     found_rules = [r for r in rules if r.found]
     score, grade = calculate_security_debt(rules)
@@ -364,6 +366,7 @@ def build_report(project: str, root: Path, rules: list[SecurityFinding],
 
 
 def print_console(project: str, root: Path, rules: list[SecurityFinding],
+    """Documentation for print_console."""
                   stats: dict, elapsed: float) -> None:
     found_rules = [r for r in rules if r.found]
     score, grade = calculate_security_debt(rules)
@@ -391,6 +394,7 @@ def print_console(project: str, root: Path, rules: list[SecurityFinding],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/security_compliance_audit.py /path/to/project [ProjectName]")
         sys.exit(1)

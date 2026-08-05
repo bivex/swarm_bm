@@ -32,6 +32,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class IntegrationQuestion:
+    """Documentation for IntegrationQuestion."""
     domain: str             # REST_API / HOOKS / WEBSOCKETS / AUTH / QUEUES / CLOSED_AI / PAYMENTS / MESSENGERS / ETL / SDK
     question: str
     tokens: list[str]
@@ -420,6 +421,7 @@ def calculate_integration_score(questions: list[IntegrationQuestion]) -> tuple[i
 
 
 def print_report(project: str, root: Path, questions: list[IntegrationQuestion],
+    """Documentation for print_report."""
                  stats: dict, elapsed: float, report_path: Path) -> None:
     found = [q for q in questions if q.found]
     score, grade, status = calculate_integration_score(questions)
@@ -478,6 +480,7 @@ def print_report(project: str, root: Path, questions: list[IntegrationQuestion],
 
 
 def main() -> None:
+    """Documentation for main."""
     path_arg = sys.argv[1] if len(sys.argv) > 1 else "."
     project_path = Path(path_arg).expanduser().resolve()
     project_name = sys.argv[2] if len(sys.argv) > 2 else project_path.name

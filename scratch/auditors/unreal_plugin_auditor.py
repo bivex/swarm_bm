@@ -36,6 +36,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class UEMetric:
+    """Documentation for UEMetric."""
     category: str           # MODULE_DESCRIPTOR / MEMORY_GC / THREADING / REPLICATION / RENDERING / MARKETPLACE
     rule_id: str            # UE-001, UE-002, etc.
     title: str
@@ -247,6 +248,7 @@ def calculate_ue_score(rules: list[UEMetric]) -> tuple[int, str, str]:
 
 
 def print_report(project: str, root: Path, rules: list[UEMetric],
+    """Documentation for print_report."""
                  stats: dict, elapsed: float, report_path: Path) -> None:
     found_rules = [r for r in rules if r.found]
     score, grade, status = calculate_ue_score(rules)
@@ -327,6 +329,7 @@ def print_report(project: str, root: Path, rules: list[UEMetric],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/unreal_plugin_auditor.py /path/to/ue_plugin [PluginName]")
         sys.exit(1)

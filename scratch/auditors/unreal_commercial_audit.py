@@ -40,6 +40,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class CommercialQuestion:
+    """Documentation for CommercialQuestion."""
     domain: str             # TARGET_MARKET / PRICING / FREEMIUM / NOCODE_UX / EDITOR_EUW / ONBOARDING / ARTIST_PRESETS / SUPPORT / LEGAL / COMMUNITY
     question_id: str        # COM-001..COM-060
     question: str
@@ -492,6 +493,7 @@ def calculate_commercial_score(questions: list[CommercialQuestion]) -> tuple[int
 
 
 def print_report(project: str, root: Path, questions: list[CommercialQuestion],
+    """Documentation for print_report."""
                  stats: dict, elapsed: float, report_path: Path) -> None:
     found = [q for q in questions if q.found]
     score, grade, status = calculate_commercial_score(questions)
@@ -550,6 +552,7 @@ def print_report(project: str, root: Path, questions: list[CommercialQuestion],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/unreal_commercial_audit.py /path/to/ue_plugin [PluginName]")
         sys.exit(1)

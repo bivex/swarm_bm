@@ -35,6 +35,7 @@ from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
 # ─────────────────────────────────────────────────────────────────────
 @dataclass
 class TelecomSpecialist:
+    """Documentation for TelecomSpecialist."""
     name: str
     role: str
     emoji: str
@@ -281,6 +282,7 @@ TELECOM_TEAM: list[TelecomSpecialist] = [
 # Audit Execution & Analysis Engine
 # ─────────────────────────────────────────────────────────────────────
 def run_telephony_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
+    """Documentation for run_telephony_audit."""
     t0 = time.perf_counter()
 
     print(f"\n{'═'*72}")
@@ -431,6 +433,7 @@ def run_telephony_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
 # Report Generator
 # ─────────────────────────────────────────────────────────────────────
 def generate_telephony_report(res: dict, out_path: Path) -> None:
+    """Documentation for generate_telephony_report."""
     lines = []
     a = lines.append
 

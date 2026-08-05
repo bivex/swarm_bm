@@ -61,6 +61,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class Tech:
+    """Documentation for Tech."""
     name: str
     category: str
     license: str
@@ -1009,6 +1010,7 @@ def run_detection(root: Path, idx: IndexStoreAdapter) -> list[Tech]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_report(project: str, root: Path, techs: list[Tech],
+    """Documentation for build_report."""
                  stats: dict, elapsed: float, report_path: Path) -> str:
     # Strictly filter ONLY found technologies
     found = [t for t in techs if t.found]
@@ -1100,6 +1102,7 @@ def build_report(project: str, root: Path, techs: list[Tech],
 
 
 def print_console(project: str, root: Path, techs: list[Tech],
+    """Documentation for print_console."""
                   stats: dict, elapsed: float) -> None:
     found = [t for t in techs if t.found]
     by_cat = defaultdict(list)
@@ -1146,6 +1149,7 @@ def print_console(project: str, root: Path, techs: list[Tech],
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/stack_slicer.py /path/to/project [ProjectName]")
         sys.exit(1)

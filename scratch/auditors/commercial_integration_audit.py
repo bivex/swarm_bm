@@ -37,6 +37,7 @@ from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
 # ─────────────────────────────────────────────────────────────────────
 @dataclass
 class MonetizationSpecialist:
+    """Documentation for MonetizationSpecialist."""
     name: str
     role: str
     emoji: str
@@ -283,6 +284,7 @@ COMMERCIAL_TEAM: list[MonetizationSpecialist] = [
 # Audit Execution Engine
 # ─────────────────────────────────────────────────────────────────────
 def run_commercial_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
+    """Documentation for run_commercial_audit."""
     t0 = time.perf_counter()
 
     print(f"\n{'═'*75}")
@@ -441,6 +443,7 @@ def run_commercial_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
 # Report Generator
 # ─────────────────────────────────────────────────────────────────────
 def generate_commercial_report(res: dict, out_path: Path) -> None:
+    """Documentation for generate_commercial_report."""
     lines = []
     a = lines.append
 

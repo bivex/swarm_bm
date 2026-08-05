@@ -33,6 +33,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class SOSTACCheck:
+    """Documentation for SOSTACCheck."""
     clause_id: str          # e.g. "S.1", "O.2"
     stage: str              # SITUATION / OBJECTIVES / STRATEGY / TACTICS / ACTIONS / CONTROL
     title: str
@@ -215,6 +216,7 @@ def scan_sostac(root: Path, idx: IndexStoreAdapter) -> list[SOSTACCheck]:
 
 
 def calculate_score(checks: list[SOSTACCheck]) -> tuple[int, str, str]:
+    """Documentation for calculate_score."""
     total_weight = sum(c.weight for c in checks)
     achieved = sum(
         c.weight * (1.0 if c.confidence == "HIGH" else 0.6 if c.confidence == "MEDIUM" else 0.3 if c.confidence == "LOW" else 0)
@@ -235,6 +237,7 @@ def calculate_score(checks: list[SOSTACCheck]) -> tuple[int, str, str]:
 
 
 def print_report(project: str, root: Path, checks: list[SOSTACCheck],
+    """Documentation for print_report."""
                  stats: dict, elapsed: float, report_path: Path) -> None:
     score, grade, status = calculate_score(checks)
     conf_icon = {"HIGH": "✅", "MEDIUM": "🟡", "LOW": "⚠️", "NONE": "❌"}
@@ -327,6 +330,7 @@ def print_report(project: str, root: Path, checks: list[SOSTACCheck],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 sostac_commercial_audit.py /path/to/project [ProjectName]")
         sys.exit(1)

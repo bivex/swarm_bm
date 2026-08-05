@@ -38,6 +38,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class WhiteLabelMetric:
+    """Documentation for WhiteLabelMetric."""
     category: str           # BRANDING / THEMING / MULTITENANCY / DOMAINS
     metric_id: str          # WL-001, WL-002, etc.
     title: str
@@ -220,6 +221,7 @@ def calculate_whitelabel_score(rules: list[WhiteLabelMetric]) -> tuple[int, str,
 
 
 def build_report(project: str, root: Path, rules: list[WhiteLabelMetric],
+    """Documentation for build_report."""
                  stats: dict, elapsed: float, report_path: Path) -> str:
     found_rules = [r for r in rules if r.found]
     score, grade, effort = calculate_whitelabel_score(rules)
@@ -288,6 +290,7 @@ def build_report(project: str, root: Path, rules: list[WhiteLabelMetric],
 
 
 def print_console(project: str, root: Path, rules: list[WhiteLabelMetric],
+    """Documentation for print_console."""
                   stats: dict, elapsed: float) -> None:
     found_rules = [r for r in rules if r.found]
     score, grade, effort = calculate_whitelabel_score(rules)
@@ -317,6 +320,7 @@ def print_console(project: str, root: Path, rules: list[WhiteLabelMetric],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/whitelabel_readiness_audit.py /path/to/project [ProjectName]")
         sys.exit(1)

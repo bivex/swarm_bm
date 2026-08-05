@@ -32,6 +32,7 @@ from swarm_mcp.infrastructure.job_engine_adapter import JobEngineAdapter
 # ─────────────────────────────────────────────────────────────────────
 @dataclass
 class Specialist:
+    """Documentation for Specialist."""
     name: str
     role: str
     emoji: str
@@ -277,6 +278,7 @@ TEAM: list[Specialist] = [
 # Risk Classification
 # ─────────────────────────────────────────────────────────────────────
 def classify_risk(score: float) -> tuple[str, str]:
+    """Documentation for classify_risk."""
     if score >= 2.5:
         return "🔴 CRITICAL", "Blocker. Must fix before any commercial launch."
     elif score >= 1.8:
@@ -291,6 +293,7 @@ def classify_risk(score: float) -> tuple[str, str]:
 # BizAudit Engine
 # ─────────────────────────────────────────────────────────────────────
 def run_bizaudit(repo_path: Path, project_name: str) -> dict[str, Any]:
+    """Documentation for run_bizaudit."""
     t0 = time.perf_counter()
 
     print(f"\n{'═'*68}")
@@ -423,6 +426,7 @@ def run_bizaudit(repo_path: Path, project_name: str) -> dict[str, Any]:
 # Report Generator
 # ─────────────────────────────────────────────────────────────────────
 def generate_report(result: dict, out_path: Path) -> None:
+    """Documentation for generate_report."""
     lines: list[str] = []
     a = lines.append
 
@@ -567,6 +571,7 @@ def generate_report(result: dict, out_path: Path) -> None:
 # Terminal Summary
 # ─────────────────────────────────────────────────────────────────────
 def print_terminal_summary(result: dict) -> None:
+    """Documentation for print_terminal_summary."""
     print(f"\n{'═'*68}")
     print(f"  📊 BIZAUDIT RESULTS — {result['project']}")
     print(f"{'═'*68}")

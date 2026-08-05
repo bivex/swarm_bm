@@ -38,6 +38,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 @dataclass
 class ArchMetric:
+    """Documentation for ArchMetric."""
     category: str           # LAYERING / COUPLING / ABSTRACTION / RESILIENCE
     rule_id: str            # ARCH-001, ARCH-002, etc.
     title: str
@@ -210,6 +211,7 @@ def calculate_architecture_score(rules: list[ArchMetric]) -> tuple[int, str, str
 
 
 def build_report(project: str, root: Path, rules: list[ArchMetric],
+    """Documentation for build_report."""
                  stats: dict, elapsed: float, report_path: Path) -> str:
     found_rules = [r for r in rules if r.found]
     score, grade, risk = calculate_architecture_score(rules)
@@ -278,6 +280,7 @@ def build_report(project: str, root: Path, rules: list[ArchMetric],
 
 
 def print_console(project: str, root: Path, rules: list[ArchMetric],
+    """Documentation for print_console."""
                   stats: dict, elapsed: float) -> None:
     found_rules = [r for r in rules if r.found]
     score, grade, risk = calculate_architecture_score(rules)
@@ -307,6 +310,7 @@ def print_console(project: str, root: Path, rules: list[ArchMetric],
 
 
 def main() -> None:
+    """Documentation for main."""
     if len(sys.argv) < 2:
         print("Usage: python3 scratch/auditors/architecture_design_audit.py /path/to/project [ProjectName]")
         sys.exit(1)

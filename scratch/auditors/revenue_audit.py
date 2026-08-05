@@ -47,6 +47,7 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 # ─────────────────────────────────────────────────────────────────────────────
 @dataclass
 class RevenueSpecialist:
+    """Documentation for RevenueSpecialist."""
     name: str
     role: str
     emoji: str
@@ -396,11 +397,13 @@ LICENSE_KEYWORDS: list[tuple[re.Pattern, str]] = [
 
 
 def detect_spdx(text: str) -> str | None:
+    """Documentation for detect_spdx."""
     m = SPDX_PATTERN.search(text)
     return m.group(1).strip() if m else None
 
 
 def classify_license_text(text: str) -> str:
+    """Documentation for classify_license_text."""
     spdx = detect_spdx(text)
     if spdx and spdx in LICENSE_DB:
         return spdx
@@ -540,6 +543,7 @@ def scan_licenses_factual(repo_path: Path) -> dict:
 # Revenue Signal Scoring Engine
 # ─────────────────────────────────────────────────────────────────────────────
 def score_arr_potential(total_files: int, answered: int, total_q: int,
+    """Documentation for score_arr_potential."""
                         per_user_score: int, per_req_score: int, enterprise_score: int) -> dict:
     coverage = answered / total_q
 
@@ -593,6 +597,7 @@ def score_arr_potential(total_files: int, answered: int, total_q: int,
 # Audit Runner
 # ─────────────────────────────────────────────────────────────────────────────
 def run_revenue_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
+    """Documentation for run_revenue_audit."""
     t0 = time.perf_counter()
 
     print(f"\n{'═'*75}")
@@ -745,6 +750,7 @@ def run_revenue_audit(repo_path: Path, project_name: str) -> dict[str, Any]:
 # Report Generator
 # ─────────────────────────────────────────────────────────────────────────────
 def generate_revenue_report(res: dict, out_path: Path) -> None:
+    """Documentation for generate_revenue_report."""
     lines = []
     a = lines.append
     f = res["arr_forecast"]

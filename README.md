@@ -18,45 +18,9 @@
 **Swarm BM** запускает **рой из 10 специализированных AI-агентов**, каждый из которых за секунды реконструирует картину проекта без галлюцинаций — только реальные пути файлов и AST-символы.
 
 ---
-
-### 🏛️ 2. Международная ISO Сертификация кодовой базы (8 ISO Стандартов)
-
-Набор специализированных аудиторов в папке `scratch/auditors/iso/` подготавливает кодовую базу к M&A Due Diligence и корпоративной ISO-сертификации:
-
-| Стандарт ISO | Описание & Область аудита | Скрипт-аудитор |
-|---|---|---|
-| 🛡️ **ISO/IEC 27001:2022** | Информационная безопасность (Анализ A.8.24 Cryptography, A.8.28 Secure Coding, DLP, Secrets) | `scratch/auditors/iso/iso_27001_security_audit.py` |
-| ⚙️ **ISO/IEC 25010:2023** | Качество ПО (Maintainability, Performance, Reliability, Security, Compatibility, Portability) | `scratch/auditors/iso/iso_25010_quality_audit.py` |
-| 🔒 **ISO/IEC 27701:2019** | Приватность & PII (GDPR compliance, Soft/Hard Delete, шифрование полей, маскирование логов) | `scratch/auditors/iso/iso_27701_privacy_audit.py` |
-| ⚡ **ISO 22301:2019** | Отказоустойчивость & Disaster Recovery (Health Probes `/healthz`, Circuit Breakers, HA Replicas) | `scratch/auditors/iso/iso_22301_resilience_audit.py` |
-| 🤖 **ISO/IEC 42001:2023** | Безопасность AI / LLM агентов (Prompt Guardrails, Token Budgeting, Schema Enforcement) | `scratch/auditors/iso/iso_42001_ai_audit.py` |
-| 📊 **ISO 31000:2018** | Управление рисками ERM (Dependabot/Snyk, детекция SPOF, EOL-библиотеки) | `scratch/auditors/iso/iso_31000_risk_audit.py` |
-| 🏅 **ISO 9001:2015** | QMS & Release Engineering (CI/CD workflows, unit tests, CODEOWNERS, CHANGELOG) | `scratch/auditors/iso/iso_9001_qms_audit.py` |
-| ☁️ **ISO/IEC 27017:2015** | Cloud Security (Изоляция тенантов RLS, S3 KMS шифрование, CloudTrail аудит) | `scratch/auditors/iso/iso_27017_cloud_security_audit.py` |
-| 🏎️ **ISO 26262 / ASIL-D** | Автомобильная безопасность (Отсутствие `malloc` в циклах, Watchdog timers, Fail-Safe states) | `scratch/auditors/iso/iso_26262_automotive_audit.py` |
-| 💳 **ISO 20022** | Межбанковский Финтех & Open Banking (pacs/pain/camt XML спеки, Idempotency-Key, mTLS) | `scratch/auditors/iso/iso_20022_fintech_audit.py` |
-| 🩺 **ISO 13485 / IEC 62304** | Медицинское ПО SaMD (Проверка диапазонов датчиков, PHI лог доступа, Hazard alarm) | `scratch/auditors/iso/iso_13485_medtech_audit.py` |
-| 🌿 **ISO 14001 / Green IT** | Энергоэффективность кода (Gzip/Brotli сжатие, кэширование CPU, детекция busy loops) | `scratch/auditors/iso/iso_14001_green_code_audit.py` |
-| 📋 **ISO/IEC 19770** | Управление лицензиями ПО (SBOM генерация, детекция GPL/AGPL конфликтов, LICENSE file) | `scratch/auditors/iso/iso_19770_license_audit.py` |
-| ☁️🔒 **ISO/IEC 27018** | Приватность PII в публичных облаках (BYOK шифрование KMS, запрет ad-трекинга, residency) | `scratch/auditors/iso/iso_27018_pii_cloud_audit.py` |
-| 🏛️ **ISO/IEC 15408 / EAL** | Common Criteria EAL (Security Target specification, power-on self-test, buffer safety) | `scratch/auditors/iso/iso_15408_common_criteria_audit.py` |
-| 🏭 **ISA/IEC 62443** | Промышленная безопасность SCADA/OT (Зонирование air-gap, OPC UA/Modbus, PLC watchdogs) | `scratch/auditors/iso/iso_62443_industrial_security_audit.py` |
-| 📌 **ISO 21500** | Управление проектами и Governance (Issue templates, ADR записи в `docs/adr/`, Roadmap) | `scratch/auditors/iso/iso_21500_project_governance_audit.py` |
-| 🧪 **ISO/IEC/IEEE 29119** | Стандарты тестирования ПО (Unit test automation, fixtures `conftest.py`, Playwright E2E) | `scratch/auditors/iso/iso_29119_software_testing_audit.py` |
-| 🛡️ **ISO/IEC 27034** | Безопасность приложений AppSec (ASC абстракции, SAST сканирование CodeQL/Semgrep, STRIDE) | `scratch/auditors/iso/iso_27034_application_security_audit.py` |
-| 🚨 **ISO/IEC 27035** | Управление инцидентами ИБ (Playbooks `INCIDENT_RESPONSE.md`, Sentry/PagerDuty, SIEM) | `scratch/auditors/iso/iso_27035_incident_management_audit.py` |
-| 🔗 **ISO/IEC 27036** | Безопасность цепочки поставок ПО (Фиксация `lockfile`, реестр вендоров, проверка уязвимостей) | `scratch/auditors/iso/iso_27036_supplier_relationships_audit.py` |
-| 🤖⚙️ **ISO/IEC 23053** | Фреймворк систем машинного обучения (MLflow/DVC реестр моделей, Feast lineage, seed determinism) | `scratch/auditors/iso/iso_23053_ai_ml_framework_audit.py` |
-| 📊 **ISO 8000** | Качество мастер-данных MDM (Валидация Pydantic, дедупликация, нормализация, Foreign Keys) | `scratch/auditors/iso/iso_8000_data_quality_audit.py` |
-| 🏛️💼 **ISO/IEC 38500** | Корпоративное управление ИТ (Видение `ARCHITECTURE.md`, правила комитета `GOVERNANCE.md`) | `scratch/auditors/iso/iso_38500_it_governance_audit.py` |
-| 🔄 **ISO/IEC/IEEE 12207** | Процессы жизненного цикла SDLC (Спецификация `REQUIREMENTS.md`, скрипты релизов) | `scratch/auditors/iso/iso_12207_software_lifecycle_audit.py` |
-| 🏛️📦 **ISO 16363** | Достоверные цифровые репозитории (Проверка хэшей SHA-256, UUIDv4, метаданные provenance) | `scratch/auditors/iso/iso_16363_digital_preservation_audit.py` |
-| ⚙️💼 **ISO/IEC 20000-1** | Управление ИТ-сервисами ITSM & SLA (Мониторинг задержек, лимитирование rate-limit, PR шаблоны) | `scratch/auditors/iso/iso_20000_1_service_management_audit.py` |
-| 🛡️📋 **ISO/IEC 27002** | Каталог мер безопасности (Разграничение прав RBAC/ABAC, маскирование логов, TLS 1.3) | `scratch/auditors/iso/iso_27002_security_controls_audit.py` |
-| 📊🔒 **ISO/IEC 27005** | Управление рисками ИБ (Реестр рисков `RISK_REGISTER.md`, CVSS скоринг, матрицы обработки) | `scratch/auditors/iso/iso_27005_risk_management_audit.py` |
-| 💾🔒 **ISO/IEC 27040** | Безопасность хранилищ и AES-256 шифрование (KMS шифрование, крипто-стирание, IAM ACLs) | `scratch/auditors/iso/iso_27040_storage_security_audit.py` |
-
 ---
+
+
 
 ### 🎮 3. Аудит игровых плагинов Unreal Engine 4 / 5 (C++ & Fab Marketplace)
 

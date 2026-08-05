@@ -48,6 +48,10 @@
 | 🔗 **ISO/IEC 27036** | Безопасность цепочки поставок ПО (Фиксация `lockfile`, реестр вендоров, проверка уязвимостей) | `scratch/auditors/iso/iso_27036_supplier_relationships_audit.py` |
 | 🤖⚙️ **ISO/IEC 23053** | Фреймворк систем машинного обучения (MLflow/DVC реестр моделей, Feast lineage, seed determinism) | `scratch/auditors/iso/iso_23053_ai_ml_framework_audit.py` |
 | 📊 **ISO 8000** | Качество мастер-данных MDM (Валидация Pydantic, дедупликация, нормализация, Foreign Keys) | `scratch/auditors/iso/iso_8000_data_quality_audit.py` |
+| 🏛️💼 **ISO/IEC 38500** | Корпоративное управление ИТ (Видение `ARCHITECTURE.md`, правила комитета `GOVERNANCE.md`) | `scratch/auditors/iso/iso_38500_it_governance_audit.py` |
+| 🔄 **ISO/IEC/IEEE 12207** | Процессы жизненного цикла SDLC (Спецификация `REQUIREMENTS.md`, скрипты релизов) | `scratch/auditors/iso/iso_12207_software_lifecycle_audit.py` |
+| 🏛️📦 **ISO 16363** | Достоверные цифровые репозитории (Проверка хэшей SHA-256, UUIDv4, метаданные provenance) | `scratch/auditors/iso/iso_16363_digital_preservation_audit.py` |
+| ⚙️💼 **ISO/IEC 20000-1** | Управление ИТ-сервисами ITSM & SLA (Мониторинг задержек, лимитирование rate-limit, PR шаблоны) | `scratch/auditors/iso/iso_20000_1_service_management_audit.py` |
 
 ---
 

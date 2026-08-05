@@ -468,8 +468,8 @@ def audit_unreal_commercial(root: Path, idx: IndexStoreAdapter) -> list[Commerci
     return COMMERCIAL_QUESTIONS
 
 
-def calculate_commercial_score(questions: list[CommercialQuestion]) -> tuple[int, str, str, str]:
-    """Calculate Commercial Readiness Score (0-100), Publisher Grade, and ARR Forecast."""
+def calculate_commercial_score(questions: list[CommercialQuestion]) -> tuple[int, str, str]:
+    """Calculate Commercial Readiness Score (0-100) and Publisher Grade."""
     total_weight = sum(q.weight for q in questions)
     found_weight = sum(q.weight for q in questions if q.found)
 
@@ -478,27 +478,23 @@ def calculate_commercial_score(questions: list[CommercialQuestion]) -> tuple[int
     if score >= 85:
         grade = "A+ (Fab Marketplace Commercial Hit — Turnkey Bestseller)"
         status = "🟢 HIGH COMMERCIAL POTENTIAL — Ready for Fab Release & Studio Sales"
-        arr = "$36,000 – $144,000 / year (High Demand + Studio Licenses)"
     elif score >= 70:
         grade = "A (Solid Commercial Product)"
         status = "🟢 GOOD — Clear Market Fit & Low Support Overhead"
-        arr = "$18,000 – $72,000 / year (Retail Marketplace Sales)"
     elif score >= 55:
         grade = "B (Moderate Commercial Potential)"
         status = "🟡 MEDIUM — Requires Better Onboarding & Blueprint UX"
-        arr = "$8,000 – $36,000 / year"
     else:
         grade = "C/F (Low Publisher Readiness)"
         status = "🔴 LOW — Niche Utility or Onboarding Barrier"
-        arr = "$2,000 – $12,000 / year"
 
-    return score, grade, status, arr
+    return score, grade, status
 
 
 def print_report(project: str, root: Path, questions: list[CommercialQuestion],
                  stats: dict, elapsed: float, report_path: Path) -> None:
     found = [q for q in questions if q.found]
-    score, grade, status, arr = calculate_commercial_score(questions)
+    score, grade, status = calculate_commercial_score(questions)
 
     lines = [
         f"# 💼 Commercial, Business & UX Publisher Audit 3.0 (60Q) — {project}",
@@ -511,7 +507,6 @@ def print_report(project: str, root: Path, questions: list[CommercialQuestion],
         f"| **Commercial Readiness Score** | **{score} / 100** |",
         f"| **Publisher Grade** | **{grade}** |",
         f"| **Commercial Status** | **{status}** |",
-        f"| **Estimated Fab ARR Forecast** | **{arr}** |",
         f"| Total Commercial Questions Audited | {len(questions)} |",
         f"| Verified Commercial Signals | {len(found)} |",
         "",
@@ -547,7 +542,6 @@ def print_report(project: str, root: Path, questions: list[CommercialQuestion],
     print(f"  Files indexed                 : {stats.get('total_files', 0):,}")
     print(f"  Commercial Readiness Score    : {score} / 100")
     print(f"  Publisher Grade               : {grade}")
-    print(f"  Estimated Fab ARR Forecast    : {arr}")
     print(f"  Total Commercial Questions    : {len(questions)}")
     print(f"  Verified Commercial Signals   : {len(found)}")
     print(f"  Audit Speed                   : {elapsed:.3f}s")

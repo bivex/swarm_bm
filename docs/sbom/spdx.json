@@ -1,0 +1,23 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2026-08-05T14:14:00Z",
+    "creators": ["Tool: SwarmBM-SBOM-Generator-1.0", "Organization: SwarmBM Team"]
+  },
+  "name": "SwarmBM Software Bill of Materials",
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://github.com/bivex/swarm_bm/spdx/v1.0.0",
+  "packages": [
+    {
+      "name": "SwarmBM",
+      "SPDXID": "SPDXRef-Package-SwarmBM",
+      "versionInfo": "1.0.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright (c) 2026 SwarmBM Team"
+    }
+  ]
+}

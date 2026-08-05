@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-╔═══════════════════════════════════════════════════════════════════════════╗
+╔═══════════════════════════════════════════════════════════════════════════════╗
 ║   📋 ISO/IEC 19770 Software Asset Management (SAM) & License Auditor       ║
 ║   BM25 + AST + Open Source License Compliance & SBOM Scanner              ║
 ║                                                                           ║
@@ -10,7 +10,7 @@
 ║   - License File Presence & Copyright Notice Verification                 ║
 ║   - Commercial SaaS Third-Party Dependency Lock-In Risk                   ║
 ║   - ISO 19770 SAM License Index (0–100) & Asset Compliance Grade          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
+╚═══════════════════════════════════════════════════════════════════════════════╝
 
 Usage:
     python3 scratch/auditors/iso/iso_19770_license_audit.py /path/to/project [ProjectName]
@@ -51,7 +51,7 @@ SAM_METRICS: list[ISO19770Metric] = [
         domain="SBOM_GOVERNANCE", metric_id="SAM-001",
         title="Software Bill of Materials Manifests (SBOM / SPDX / CycloneDX)",
         impact="POSITIVE", score_delta=+25,
-        description="Repository maintains structured package manifests (package.json, requirements.txt, Cargo.toml).",
+        description="Repository maintains structured package manifests or SPDX/CycloneDX SBOM files.",
         remediation="Generate SPDX or CycloneDX SBOM manifests for all build dependencies.",
     ),
     ISO19770Metric(
@@ -79,15 +79,16 @@ SAM_METRICS: list[ISO19770Metric] = [
 
 
 PATTERNS = {
-    "SAM-001": ["package.json", "requirements.txt", "Cargo.toml", "pom.xml", "go.mod"],
+    "SAM-001": ["package.json", "requirements.txt", "Cargo.toml", "pom.xml", "go.mod", "spdx", "cyclonedx", "sbom"],
     "SAM-002": ["GPL-3.0", "AGPL-3.0", "General Public License", "GPLv3"],
-    "SAM-003": ["LICENSE", "LICENSE.txt", "LICENSE.md", "COPYING"],
+    "SAM-003": ["LICENSE", "LICENSE.txt", "LICENSE.md", "COPYING", "mit license"],
     "SAM-004": ["stripe", "twilio", "firebase", "sendgrid", "algolia"],
 }
 
 
 def scan_iso19770(root: Path, idx: IndexStoreAdapter) -> list[ISO19770Metric]:
     """Scan codebase for ISO/IEC 19770 Software Asset Management controls."""
+    idx.rebuild(root)
     for m in SAM_METRICS:
         pats = PATTERNS.get(m.metric_id, [])
         hits = set()
@@ -96,6 +97,11 @@ def scan_iso19770(root: Path, idx: IndexStoreAdapter) -> list[ISO19770Metric]:
             lic_files = list(root.glob("*LICENSE*")) + list(root.glob("*COPYING*"))
             if lic_files:
                 hits.update(str(f.relative_to(root)) for f in lic_files[:4])
+
+        if m.metric_id == "SAM-001":
+            sbom_files = list(root.glob("**/spdx*")) + list(root.glob("**/cyclonedx*")) + list(root.glob("**/sbom*"))
+            if sbom_files:
+                hits.update(str(f.relative_to(root)) for f in sbom_files[:4])
 
         for pat in pats:
             try:
@@ -116,27 +122,29 @@ def calculate_iso19770_score(metrics: list[ISO19770Metric]) -> tuple[int, str, s
     """Calculate ISO 19770 SAM License Score (0-100)."""
     base_score = 50
     for m in metrics:
-        if m.found:
+        if m.impact == "POSITIVE" and m.found:
             base_score += m.score_delta
+        elif m.impact == "RISK" and not m.found:
+            # Absence of risk is a positive compliance indicator
+            base_score += abs(m.score_delta)
 
     score = max(0, min(100, base_score))
 
-    if score >= 80:
-        grade = "A+ (ISO 19770 SAM License Certified)"
-        status = "🟢 FULLY COMPLIANT — License File, SBOM Manifests & Clean Permissive Licensing"
-    elif score >= 60:
+    if score >= 85:
+        grade = "A+ (Full ISO 19770 SAM Conformance)"
+        status = "🟢 EXCELLENT — Complete License, Copyright & SBOM Governance"
+    elif score >= 70:
         grade = "A (Good Asset Governance)"
         status = "🟢 ACCEPTABLE — License File or Package Manifests Present"
     else:
-        grade = "C/F (License Conflict Risk)"
-        status = "🔴 LICENSE HAZARD — Missing LICENSE File or GPL Copyleft Infection"
+        grade = "C/F (SAM Compliance Risk)"
+        status = "🔴 HIGH RISK — Missing License File or Copyleft Infection Hazard"
 
     return score, grade, status
 
 
 def print_report(project: str, root: Path, metrics: list[ISO19770Metric],
                  stats: dict, elapsed: float, report_path: Path) -> None:
-    found = [m for m in metrics if m.found]
     score, grade, status = calculate_iso19770_score(metrics)
 
     lines = [
@@ -151,7 +159,7 @@ def print_report(project: str, root: Path, metrics: list[ISO19770Metric],
         f"| **Asset Compliance Grade** | **{grade}** |",
         f"| **Asset Status** | **{status}** |",
         f"| Total Files Scanned | {stats.get('total_files', 0):,} |",
-        f"| Verified Asset Controls | {len(found)} / {len(metrics)} |",
+        f"| Verified Asset Controls | {sum(1 for m in metrics if m.found)} / {len(metrics)} |",
         "",
         "## 🔍 Verified ISO 19770 SAM Evidence",
         "",
@@ -159,9 +167,10 @@ def print_report(project: str, root: Path, metrics: list[ISO19770Metric],
         "|---|---|---|---|---|",
     ]
 
-    for m in found:
-        ev = ", ".join(f"`{e}`" for e in m.evidence_files[:2])
-        lines.append(f"| `{m.domain}` | {m.title} | ✅ FOUND | {ev} | {m.remediation} |")
+    for m in metrics:
+        st = "✅ FOUND" if m.found else "❌ MISSING"
+        ev = ", ".join(f"`{e}`" for e in m.evidence_files[:2]) if m.evidence_files else "None"
+        lines.append(f"| `{m.domain}` | {m.title} | {st} | {ev} | {m.remediation} |")
 
     lines += [
         "",
@@ -184,7 +193,7 @@ def print_report(project: str, root: Path, metrics: list[ISO19770Metric],
     print(f"  Files indexed               : {stats.get('total_files', 0):,}")
     print(f"  ISO 19770 SAM Score         : {score} / 100")
     print(f"  Asset Compliance Grade      : {grade}")
-    print(f"  Verified Controls           : {len(found)} / {len(metrics)}")
+    print(f"  Verified Controls           : {sum(1 for m in metrics if m.found)} / {len(metrics)}")
     print(f"  Audit Speed                 : {elapsed:.3f}s")
     print(f"  Report Saved                : {report_path}")
     print(f"{SEP}\n")

@@ -52,6 +52,9 @@
 | 🔄 **ISO/IEC/IEEE 12207** | Процессы жизненного цикла SDLC (Спецификация `REQUIREMENTS.md`, скрипты релизов) | `scratch/auditors/iso/iso_12207_software_lifecycle_audit.py` |
 | 🏛️📦 **ISO 16363** | Достоверные цифровые репозитории (Проверка хэшей SHA-256, UUIDv4, метаданные provenance) | `scratch/auditors/iso/iso_16363_digital_preservation_audit.py` |
 | ⚙️💼 **ISO/IEC 20000-1** | Управление ИТ-сервисами ITSM & SLA (Мониторинг задержек, лимитирование rate-limit, PR шаблоны) | `scratch/auditors/iso/iso_20000_1_service_management_audit.py` |
+| 🛡️📋 **ISO/IEC 27002** | Каталог мер безопасности (Разграничение прав RBAC/ABAC, маскирование логов, TLS 1.3) | `scratch/auditors/iso/iso_27002_security_controls_audit.py` |
+| 📊🔒 **ISO/IEC 27005** | Управление рисками ИБ (Реестр рисков `RISK_REGISTER.md`, CVSS скоринг, матрицы обработки) | `scratch/auditors/iso/iso_27005_risk_management_audit.py` |
+| 💾🔒 **ISO/IEC 27040** | Безопасность хранилищ и AES-256 шифрование (KMS шифрование, крипто-стирание, IAM ACLs) | `scratch/auditors/iso/iso_27040_storage_security_audit.py` |
 
 ---
 

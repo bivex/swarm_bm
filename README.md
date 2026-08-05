@@ -33,6 +33,11 @@
 | 📊 **ISO 31000:2018** | Управление рисками ERM (Dependabot/Snyk, детекция SPOF, EOL-библиотеки) | `scratch/auditors/iso/iso_31000_risk_audit.py` |
 | 🏅 **ISO 9001:2015** | QMS & Release Engineering (CI/CD workflows, unit tests, CODEOWNERS, CHANGELOG) | `scratch/auditors/iso/iso_9001_qms_audit.py` |
 | ☁️ **ISO/IEC 27017:2015** | Cloud Security (Изоляция тенантов RLS, S3 KMS шифрование, CloudTrail аудит) | `scratch/auditors/iso/iso_27017_cloud_security_audit.py` |
+| 🏎️ **ISO 26262 / ASIL-D** | Автомобильная безопасность (Отсутствие `malloc` в циклах, Watchdog timers, Fail-Safe states) | `scratch/auditors/iso/iso_26262_automotive_audit.py` |
+| 💳 **ISO 20022** | Межбанковский Финтех & Open Banking (pacs/pain/camt XML спеки, Idempotency-Key, mTLS) | `scratch/auditors/iso/iso_20022_fintech_audit.py` |
+| 🩺 **ISO 13485 / IEC 62304** | Медицинское ПО SaMD (Проверка диапазонов датчиков, PHI лог доступа, Hazard alarm) | `scratch/auditors/iso/iso_13485_medtech_audit.py` |
+| 🌿 **ISO 14001 / Green IT** | Энергоэффективность кода (Gzip/Brotli сжатие, кэширование CPU, детекция busy loops) | `scratch/auditors/iso/iso_14001_green_code_audit.py` |
+| 📋 **ISO/IEC 19770** | Управление лицензиями ПО (SBOM генерация, детекция GPL/AGPL конфликтов, LICENSE file) | `scratch/auditors/iso/iso_19770_license_audit.py` |
 
 ---
 

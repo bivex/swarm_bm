@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║   💼 Unreal Engine Commercial & Publisher Enterprise Auditor 2.0           ║
-║   Non-Technical Commercial Readiness, Market Fit & Publisher Scanner      ║
+║   💼 Unreal Engine Commercial & Publisher Enterprise Auditor 3.0           ║
+║   60+ Non-Technical Commercial Readiness, Market Fit & Publisher Scanner  ║
 ║                                                                           ║
-║   PURPOSE: Evaluate UE Plugins from Business, Publisher, Legal & UX       ║
-║   perspectives:                                                           ║
-║   - Target Market Segment (AAA Studios, Indie Devs, Virtual Production)    ║
-║   - Epic Fab Marketplace Monetization Potential ($ ARR Forecast)          ║
+║   PURPOSE: Comprehensive 60-Question Commercial Audit covering 10 domains:║
+║   - Target Market & Studio Segmentation (AAA, VR, Simulators)            ║
+║   - Commercial Pricing Power & ROI Justification ($99-$499/yr)            ║
+║   - Open-Core vs Paid Pro Upgrade Triggers                                ║
 ║   - No-Code Blueprint UX Ergonomics for Game Designers                    ║
-║   - Onboarding Friction & Sample Maps (/Content/Maps/Demo.umap)           ║
-║   - Support Burden & UE Version Porting Maintenance Overhead              ║
-║   - Legal, Copyright & GPL Copyleft Infection Risk                         ║
+║   - Editor Utility Widgets (EUW) & In-Editor Workflows                    ║
+║   - Onboarding Friction & Plug-and-Play Demo Maps (/Content/Maps/)        ║
+║   - Technical Artist Presets & Material Systems                           ║
+║   - Support Burden & UE Version Migration Overhead                        ║
+║   - Epic Fab Marketplace EULA & Legal Safety                              ║
+║   - Community Social Proof & B2B Enterprise Custom Support                ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
 Usage:
@@ -36,203 +39,441 @@ from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
 
 @dataclass
-class CommercialMetric:
-    dimension: str          # BUSINESS / UX_DESIGNER / LEGAL / SUPPORT / ONBOARDING / MARKETING / PRICING
-    metric_id: str          # COM-001..COM-025
-    title: str
+class CommercialQuestion:
+    domain: str             # TARGET_MARKET / PRICING / FREEMIUM / NOCODE_UX / EDITOR_EUW / ONBOARDING / ARTIST_PRESETS / SUPPORT / LEGAL / COMMUNITY
+    question_id: str        # COM-001..COM-060
+    question: str
+    tokens: list[str]
+    weight: int             # 1-5
     impact: str             # HIGH_VALUE / MEDIUM_VALUE / RISK
-    score_delta: int        # Commercial Score Delta
-    description: str
     evidence: list[str] = field(default_factory=list)
     actionable_insight: str = ""
     found: bool = False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 25 Commercial & Publisher Metrics Registry
+# 60 Commercial & Publisher Questions Registry
 # ─────────────────────────────────────────────────────────────────────────────
-COMMERCIAL_METRICS: list[CommercialMetric] = [
+COMMERCIAL_QUESTIONS: list[CommercialQuestion] = [
 
-    # ── 1. BUSINESS & TARGET MARKET SEGMENT ──────────────────────────────────
-    CommercialMetric(
-        dimension="BUSINESS", metric_id="COM-001",
-        title="High B2B Enterprise Target Market (AAA / Virtual Production / Simulators)",
-        impact="HIGH_VALUE", score_delta=+20,
-        description="Targets high-budget commercial sectors (Virtual Production, Enterprise VR, Defense Simulators, AAA Game Studios).",
-        actionable_insight="Offer an Enterprise Custom License Tier ($499–$1,999/yr) alongside Fab Marketplace retail ($49–$99).",
+    # ── 1. TARGET MARKET & STUDIO SEGMENTATION (6 Questions) ─────────────────
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-001", weight=5, impact="HIGH_VALUE",
+        question="Ориентирован ли плагин на высокобюджетные B2B секторы (AAA, Virtual Production, VR, Симуляторы)?",
+        tokens=["Enterprise", "VirtualProduction", "VR", "Simulator", "Multiplayer", "AAA"],
+        actionable_insight="Предложите Enterprise Custom License Tier ($499–$1,999/год) вместе с Fab Marketplace retail ($49–$99).",
     ),
-    CommercialMetric(
-        dimension="BUSINESS", metric_id="COM-002",
-        title="Tiered Open-Core vs Pro Upgrade Triggers",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Features clear separation between free open-core and high-value paid Pro extensions (Dedicated Server, C++ Source).",
-        actionable_insight="Publish free Core on GitHub for developer adoption, sell Pro / Source on Fab Marketplace.",
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-002", weight=4, impact="HIGH_VALUE",
+        question="Поддерживаются ли мультиплеерные dedicated сервера для сетевых онлайн-игр?",
+        tokens=["DedicatedServer", "Multiplayer", "Server", "Replication", "Network"],
+        actionable_insight="Сетевые студии платят в 3x больше за плагины с готовой поддержкой Dedicated Server.",
     ),
-    CommercialMetric(
-        dimension="BUSINESS", metric_id="COM-003",
-        title="Cross-Platform Mobile & Console Compatibility (iOS / Android / PS5 / Xbox)",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Supports mobile and console platform targets, expanding buyer pool to multi-platform studios.",
-        actionable_insight="Highlight PS5/Xbox/Switch compatibility badge on Fab Marketplace listing to command 2x price.",
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-003", weight=4, impact="HIGH_VALUE",
+        question="Есть ли поддержка мобильных платформ (iOS / Android)?",
+        tokens=["iOS", "Android", "Mobile", "Touch"],
+        actionable_insight="Опубликуйте плашку 'Mobile Ready' для увеличения объема продаж мобильным разработчикам.",
     ),
-
-    # ── 2. UX & NO-CODE DESIGNER ACCESSIBILITY ────────────────────────────────
-    CommercialMetric(
-        dimension="UX_DESIGNER", metric_id="COM-004",
-        title="100% No-Code Blueprint Visual Scripting Ergonomics",
-        impact="HIGH_VALUE", score_delta=+20,
-        description="Non-programmer game designers can configure and use 100% of features using Blueprint nodes.",
-        actionable_insight="Increases addressable buyer market by 5x (designers & artists outnumber programmers 5:1).",
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-004", weight=4, impact="HIGH_VALUE",
+        question="Есть ли поддержка консольных платформ (PS5 / Xbox Series / Nintendo Switch)?",
+        tokens=["PS5", "Xbox", "Switch", "Console"],
+        actionable_insight="Продавайте коммерческие лицензии консольным разработчикам по завышенному тарифу.",
     ),
-    CommercialMetric(
-        dimension="UX_DESIGNER", metric_id="COM-005",
-        title="Custom UMG / Slate Designer UI Presets",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Includes customizable UI widgets, themes, and visual presets that require zero UI coding.",
-        actionable_insight="Saves game studios 40+ hours of UI design work, unlocking higher pricing power.",
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-005", weight=4, impact="HIGH_VALUE",
+        question="Ориентирован ли плагин на архитектурную визуализацию и метавселенные (ArchViz / Automotive)?",
+        tokens=["ArchViz", "Automotive", "Datasmith", "Visualization", "RealEstate"],
+        actionable_insight="Студии архитектуры готов платить от $299 за плагин, экономящий время визуализации.",
     ),
-    CommercialMetric(
-        dimension="UX_DESIGNER", metric_id="COM-006",
-        title="Visual Asset Manager / Editor Tool Utility (EUW)",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Includes Editor Utility Widgets (EUW) allowing game designers to inspect and tweak assets inside UE Editor.",
-        actionable_insight="Market as an in-editor workflow booster for level designers.",
+    CommercialQuestion(
+        domain="TARGET_MARKET", question_id="COM-006", weight=4, impact="HIGH_VALUE",
+        question="Поддерживает ли плагин шлемы виртуальной и дополненной реальности (OpenXR / VisionOS)?",
+        tokens=["OpenXR", "VR", "AR", "Headset", "MotionController"],
+        actionable_insight="Выделите тег 'XR Ready' для привлечения покупателей из корпоративного VR-обучения.",
     ),
 
-    # ── 3. ONBOARDING & SAMPLE ASSETS ─────────────────────────────────────────
-    CommercialMetric(
-        dimension="ONBOARDING", metric_id="COM-007",
-        title="Plug-and-Play Demo Maps & Pre-configured Content (/Content/Maps/Demo.umap)",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Contains ready-to-run demo level maps for instant buyer testing in < 3 minutes.",
-        actionable_insight="Reduces Marketplace refund requests by 60% and generates 5-star buyer reviews.",
+    # ── 2. COMMERCIAL PRICING POWER & ROI JUSTIFICATION (6 Questions) ───────
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-007", weight=5, impact="HIGH_VALUE",
+        question="Экономит ли плагин покупателю 80+ часов C++ разработки, оправдывая ценник $99–$249?",
+        tokens=["Hours", "Save", "Performance", "Optimization", "Speedup"],
+        actionable_insight="Укажите 'Экономит 80+ часов разработки C++' в заглавии листинга на Fab Marketplace.",
     ),
-    CommercialMetric(
-        dimension="ONBOARDING", metric_id="COM-008",
-        title="Comprehensive Developer & Designer Documentation",
-        impact="HIGH_VALUE", score_delta=+10,
-        description="Includes step-by-step setup guides, video tutorial links, and API references.",
-        actionable_insight="Drastically reduces support ticket volume and onboarding friction for new game studios.",
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-008", weight=4, impact="HIGH_VALUE",
+        question="Заменяет ли плагин собой подписку на дорогостоящие внешние SaaS сервисы?",
+        tokens=["SaaS", "Subscription", "Cloud", "Service", "Cost"],
+        actionable_insight="Позиционируйте плагин как разовую покупку без ежемесячных платежей.",
     ),
-    CommercialMetric(
-        dimension="ONBOARDING", metric_id="COM-009",
-        title="Pre-made Material & Shader Presets",
-        impact="HIGH_VALUE", score_delta=+10,
-        description="Includes ready-to-use Material Instances and HLSL shader presets.",
-        actionable_insight="Appeals to technical artists looking for instant visual fidelity.",
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-009", weight=4, impact="HIGH_VALUE",
+        question="Содержит ли плагин готовые пресеты, позволяющие запустить фичу за 5 минут?",
+        tokens=["Preset", "QuickStart", "Template", "5min"],
+        actionable_insight="Маркетинговый акцент на мгновенный запуск поднимает конверсию листинга в 2 раза.",
     ),
-
-    # ── 4. SUPPORT BURDEN & MIGRATION EFFORT ─────────────────────────────────
-    CommercialMetric(
-        dimension="SUPPORT", metric_id="COM-010",
-        title="Low Support Ticket Overhead (Self-Contained Module)",
-        impact="HIGH_VALUE", score_delta=+10,
-        description="Plugin is self-contained with minimal external dependencies, minimizing buyer troubleshooting requests.",
-        actionable_insight="Maintains high passive profit margin per support hour invested.",
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-010", weight=4, impact="HIGH_VALUE",
+        question="Есть ли возможность продавать дополнительные контент-паки (Add-ons / Content Packs)?",
+        tokens=["Addon", "ExtensionPack", "ContentPack", "Extra"],
+        actionable_insight="Создайте экосистему платных аддонов по $19-$29 для повторных продаж существующим покупателям.",
     ),
-    CommercialMetric(
-        dimension="SUPPORT", metric_id="COM-011",
-        title="UE Minor Engine Version Upgrade Porting Effort (UE 5.0 -> 5.5+)",
-        impact="RISK", score_delta=-15,
-        description="Relies on deep non-public engine headers that may break during Unreal Engine minor updates.",
-        actionable_insight="Use public UE APIs to minimize annual engine version porting maintenance hours.",
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-011", weight=4, impact="HIGH_VALUE",
+        question="Оправдана ли продажа плагина по модели безлимитных исходников (Full C++ Source Code)?",
+        tokens=["SourceCode", "FullSource", "C++", "SourceIncluded"],
+        actionable_insight="Студии покупают исходники по тарифу $199+, открывая доступ к кастомизации под свои нужды.",
     ),
-
-    # ── 5. LEGAL & COPYRIGHT SAFETY ──────────────────────────────────────────
-    CommercialMetric(
-        dimension="LEGAL", metric_id="COM-012",
-        title="Epic Fab Marketplace TOS & EULA Compliance",
-        impact="HIGH_VALUE", score_delta=+10,
-        description="Clean copyright attribution and non-restrictive license suitable for Fab Marketplace selling.",
-        actionable_insight="Ensures instant approval during Epic Games store review.",
-    ),
-    CommercialMetric(
-        dimension="LEGAL", metric_id="COM-013",
-        title="GPL Copyleft Infection Risk on Commercial Games",
-        impact="RISK", score_delta=-25,
-        description="Contains GPL/AGPL copyleft dependencies that would legally force game developers to open-source their commercial games.",
-        actionable_insight="Replace GPL code immediately with MIT/Apache-2.0 or proprietary C++ implementation.",
+    CommercialQuestion(
+        domain="PRICING", question_id="COM-012", weight=4, impact="HIGH_VALUE",
+        question="Есть ли встроенный механизм лимитирования бесплатной версии (Watermark / Trial Limit)?",
+        tokens=["Trial", "Watermark", "Limit", "FreeVersion"],
+        actionable_insight="Используйте водяной знак в бесплатной версии на GitHub для драйва продаж платной версии.",
     ),
 
-    # ── 6. MARKETING & PRICING POWER ─────────────────────────────────────────
-    CommercialMetric(
-        dimension="PRICING", metric_id="COM-014",
-        title="High Buyer ROI & Time-Savings Pitch (Saves 80+ Dev Hours)",
-        impact="HIGH_VALUE", score_delta=+15,
-        description="Plugin replaces weeks of custom C++ development, justifying a $99–$249 retail price point.",
-        actionable_insight="Highlight 'Saves 80+ Hours of C++ Development' prominently in Fab Marketplace title.",
+    # ── 3. OPEN-CORE VS PAID PRO UPGRADE TRIGGERS (6 Questions) ──────────────
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-013", weight=5, impact="HIGH_VALUE",
+        question="Четко ли разделен код на бесплатный Open-Core и платные Pro модули?",
+        tokens=["Pro", "Free", "Commercial", "License", "Paid", "Premium"],
+        actionable_insight="Бесплатное ядро привлекает сообщество, а Pro-модули генерируют основной поток выручки.",
     ),
-    CommercialMetric(
-        dimension="MARKETING", metric_id="COM-015",
-        title="Active Discord / Community Support Integration",
-        impact="HIGH_VALUE", score_delta=+10,
-        description="Provides community support links, driving buyer trust and social proof.",
-        actionable_insight="Build a Discord community to upsell custom B2B studio features.",
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-014", weight=4, impact="HIGH_VALUE",
+        question="Вынесены ли коммерческие фичи в закрытые динамические библиотеки (.dll / .so / .dylib)?",
+        tokens=["DLL", "PluginBinary", "Compiled", "BinaryOnly"],
+        actionable_insight="Позволяет поставлять Pro-версию без раскрытия компрометирующих бизнес-алгоритмов.",
+    ),
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-015", weight=4, impact="HIGH_VALUE",
+        question="Есть ли встроенная проверка коммерческой лицензии или подписи плагина?",
+        tokens=["LicenseKey", "Validation", "Signature", "VerifyLicense"],
+        actionable_insight="Защищает плагин от нелицензионного использования в коммерческих игровых проектах.",
+    ),
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-016", weight=4, impact="HIGH_VALUE",
+        question="Доступны ли расширенные инструменты аналитики производительности только в Pro версии?",
+        tokens=["Profiler", "Analytics", "Metrics", "ProTools"],
+        actionable_insight="Отличный триггер для апгрейда коммерческими студиями на этапе оптимизации перед релизом.",
+    ),
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-017", weight=4, impact="HIGH_VALUE",
+        question="Предлагается ли платный модуль интеграции с облачными серверами (AWS / Firebase / PlayFab)?",
+        tokens=["PlayFab", "AWS", "Firebase", "BackendIntegration"],
+        actionable_insight="Продавайте облачные интеграции отдельным коммерческим плагином.",
+    ),
+    CommercialQuestion(
+        domain="FREEMIUM", question_id="COM-018", weight=4, impact="HIGH_VALUE",
+        question="Есть ли опция покупки подписки на приоритетные обновления и ранний доступ к бэтам?",
+        tokens=["Beta", "EarlyAccess", "PriorityUpdates", "VIP"],
+        actionable_insight="Обеспечивает прогнозируемый рекуррентный доход через Boosty / Patreon.",
+    ),
+
+    # ── 4. NO-CODE BLUEPRINT UX FOR GAME DESIGNERS (6 Questions) ─────────────
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-019", weight=5, impact="HIGH_VALUE",
+        question="Доступно ли 100% функционала геймдизайнерам без написания кода C++ (BlueprintCallable)?",
+        tokens=["BlueprintCallable", "BlueprintPure", "BlueprintType", "BlueprintAssignable"],
+        actionable_insight="Увеличивает целевую аудиторию покупателей в 5 раз (дизайнеров больше, чем C++ программистов).",
+    ),
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-020", weight=4, impact="HIGH_VALUE",
+        question="Понятно ли структурированы категории Blueprint нод (`Category = 'MyPlugin|Core'`)?",
+        tokens=["Category", "DisplayName", "Keywords", "ToolTip"],
+        actionable_insight="Удобная категория нод в меню Blueprint сокращает время поиска нужной функции до 2 секунд.",
+    ),
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-021", weight=4, impact="HIGH_VALUE",
+        question="Есть ли информативные подсказки (ToolTips) у всех параметров нод в редакторе?",
+        tokens=["ToolTip", "DocString", "HelpText", "Description"],
+        actionable_insight="Всплывающие подсказки избавляют покупателя от необходимости постоянно читать документацию.",
+    ),
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-022", weight=4, impact="HIGH_VALUE",
+        question="Используются ли удобные Blueprint Enum выборы вместо невнятных чисел или строк?",
+        tokens=["UENUM", "Enum", "BlueprintType", "DisplayNames"],
+        actionable_insight="Предотвращает ошибки дизайнеров при выборе режимов работы плагина.",
+    ),
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-023", weight=4, impact="HIGH_VALUE",
+        question="Есть ли понятные Blueprint события (Event Delegates) для отслеживания результатов?",
+        tokens=["DECLARE_DYNAMIC_MULTICAST_DELEGATE", "Event", "OnSuccess", "OnFailure"],
+        actionable_insight="Позволяет легко навешивать логику на события без написания опросов (polling).",
+    ),
+    CommercialQuestion(
+        domain="NOCODE_UX", question_id="COM-024", weight=4, impact="HIGH_VALUE",
+        question="Безопасны ли Blueprint ноды от вызовов с нулевыми указателями (`NULL` Checks)?",
+        tokens=["IsValid", "NullCheck", "Ensure", "Check"],
+        actionable_insight="Предотвращает падения редактора (Editor Crash) при неверных действиях дизайнера.",
+    ),
+
+    # ── 5. EDITOR EXTENSIONS & UTILITY WIDGETS (EUW) (6 Questions) ────────────
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-025", weight=5, impact="HIGH_VALUE",
+        question="Включены ли в плагин пользовательские утилиты редактора (Editor Utility Widgets / EUW)?",
+        tokens=["EditorUtilityWidget", "EUW", "EditorSubsystem", "Blutility"],
+        actionable_insight="Позиционируйте плагин как инструментарий для автоматизации рутины внутри UE Editor.",
+    ),
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-026", weight=4, impact="HIGH_VALUE",
+        question="Есть ли визуальное окно настроек плагина в Project Settings (`ISettingsModule`)?",
+        tokens=["ISettingsModule", "ProjectSettings", "DeveloperSettings"],
+        actionable_insight="Глобальные настройки проекта в одном окне повышают профессиональный вид плагина.",
+    ),
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-027", weight=4, impact="HIGH_VALUE",
+        question="Добавляет ли плагин удобные кнопки во встроенную панель редактора (Toolbar Buttons)?",
+        tokens=["FUICommandInfo", "FExtender", "Toolbar", "MenuBuilder"],
+        actionable_insight="Доступ к основным функциям в 1 клик прямо с панели Unreal Editor.",
+    ),
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-028", weight=4, impact="HIGH_VALUE",
+        question="Есть ли валидатор ассетов в редакторе (Data Validation Subsystem)?",
+        tokens=["UEditorValidator", "ValidateData", "AssetValidation"],
+        actionable_insight="Автоматическая проверка неверных настроек ассетов перед сборкой проекта.",
+    ),
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-029", weight=4, impact="HIGH_VALUE",
+        question="Поддерживаются ли кастомные визуализаторы компонентов во viewport (Component Visualizers)?",
+        tokens=["FComponentVisualizer", "DrawVisualization", "ViewportDraw"],
+        actionable_insight="Наглядная отрисовка радиусов и путей прямо в 3D окне редактора.",
+    ),
+    CommercialQuestion(
+        domain="EDITOR_EUW", question_id="COM-030", weight=4, impact="HIGH_VALUE",
+        question="Есть ли автоматическая генерация отчетов по объектам прямо из окна редактора?",
+        tokens=["GenerateReport", "ExportStats", "EditorReport"],
+        actionable_insight="Полезно для лидов разработки при проведении аудита ресурсов проекта.",
+    ),
+
+    # ── 6. ONBOARDING & PLUG-AND-PLAY DEMO MAPS (6 Questions) ─────────────────
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-031", weight=5, impact="HIGH_VALUE",
+        question="Содержит ли плагин готовую демо-карту (`/Content/Maps/Demo.umap`) для проверки за 3 минуты?",
+        tokens=["Demo", "Example", "Map", "Content", "Sample", "umap"],
+        actionable_insight="Снижает процент возвратов на Fab Marketplace на 60% и генерирует отзывы 5 звезд.",
+    ),
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-032", weight=4, impact="HIGH_VALUE",
+        question="Включена ли подробная документация с пошаговыми инструкциями по установке?",
+        tokens=["README", "Doc", "Tutorial", "Guide", "Wiki", "pdf"],
+        actionable_insight="Подробный гайд экономит часы работы техподдержки.",
+    ),
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-033", weight=4, impact="HIGH_VALUE",
+        question="Есть ли видео-туториалы на YouTube или GIF-демонстрации основных фич?",
+        tokens=["Video", "YouTube", "GIF", "Overview", "Walkthrough"],
+        actionable_insight="Наличие видео в описании листинга увеличивает конверсию в покупку на 40%.",
+    ),
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-034", weight=4, impact="HIGH_VALUE",
+        question="Поставляются ли готовые пресеты ассетов, которые можно сразу перетащить на сцену?",
+        tokens=["Prefab", "Preset", "Asset", "Content", "ReadyToUse"],
+        actionable_insight="Принцип 'Drag & Drop' очень ценится начинающими разработчиками.",
+    ),
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-035", weight=4, impact="HIGH_VALUE",
+        question="Есть ли интерактивное обучение или всплывающие подсказки при первом запуске?",
+        tokens=["InteractiveTutorial", "WelcomeWizard", "FirstStartGuide"],
+        actionable_insight="Быстрый ввод в работу создает отличный первый опыт использования плагина.",
+    ),
+    CommercialQuestion(
+        domain="ONBOARDING", question_id="COM-036", weight=4, impact="HIGH_VALUE",
+        question="Предоставляется ли чек-лист интеграции плагина в существующий проект?",
+        tokens=["Checklist", "IntegrationGuide", "MigrationSteps"],
+        actionable_insight="Помогает внедрить плагин в уже готовый проект без слома существующей логики.",
+    ),
+
+    # ── 7. TECHNICAL ARTIST PRESETS & MATERIAL SYSTEMS (6 Questions) ──────────
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-037", weight=5, impact="HIGH_VALUE",
+        question="Включены ли готовые шейдеры и материальные инстансы (Material Instances)?",
+        tokens=["Material", "MaterialInstance", "Shader", "HLSL", "PBR"],
+        actionable_insight="Привлекает технических художников, ищущих готовые визуальные эффекты.",
+    ),
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-038", weight=4, impact="HIGH_VALUE",
+        question="Поддерживается ли динамическая смена параметров материалов во время игры (MID)?",
+        tokens=["UMaterialInstanceDynamic", "SetScalarParameterValue", "VectorParameter"],
+        actionable_insight="Позволяет создавать плавно меняющиеся визуальные эффекты в реальном времени.",
+    ),
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-039", weight=4, impact="HIGH_VALUE",
+        question="Есть ли поддержка визуальных эффектов Niagara / Cascade?",
+        tokens=["Niagara", "Cascade", "ParticleSystem", "VFX"],
+        actionable_insight="Готовые эффекты частиц повышают визуальное качество любого игрового проекта.",
+    ),
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-040", weight=4, impact="HIGH_VALUE",
+        question="Оптимизированы ли шейдеры под мобильные GPU и VR шлемы (Low Shader Complexity)?",
+        tokens=["MobileShader", "ShaderComplexity", "LowPoly", "OptimizeShader"],
+        actionable_insight="Высокая производительность шейдеров критична для мобильных и VR игр.",
+    ),
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-041", weight=4, impact="HIGH_VALUE",
+        question="Поддерживается ли процедурная генерация материалов и текстур?",
+        tokens=["Procedural", "Substance", "RuntimeTexture", "GenerateTexture"],
+        actionable_insight="Процедурность экономит память и дает бесконечное разнообразие визуала.",
+    ),
+    CommercialQuestion(
+        domain="ARTIST_PRESETS", question_id="COM-042", weight=4, impact="HIGH_VALUE",
+        question="Включена ли поддержка Lumen и Nanite для UE5 проектов нового поколения?",
+        tokens=["Lumen", "Nanite", "VirtualShadowMaps", "UE5Features"],
+        actionable_insight="Тег 'UE5 Lumen & Nanite Ready' — обязательное условие для современных продаж.",
+    ),
+
+    # ── 8. SUPPORT OVERHEAD & VERSION PORTING FRICTION (6 Questions) ───────────
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-043", weight=5, impact="HIGH_VALUE",
+        question="Является ли плагин самодостаточным модулем без тяжелых внешних сторонних зависимостей?",
+        tokens=["Standalone", "SelfContained", "NoDependencies", "Independent"],
+        actionable_insight="Минимизирует вопросы покупателей по сложной настройке внешних библиотек.",
+    ),
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-044", weight=4, impact="RISK",
+        question="Зависит ли плагин от приватных внутренних заголовков движка (Private Headers)?",
+        tokens=["Private/", "Internal/", "UnrealEngine/Private"],
+        actionable_insight="Приватные заголовки ломаются при каждом обновлении UE 5.x, создавая работу по переписыванию.",
+    ),
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-045", weight=4, impact="HIGH_VALUE",
+        question="Есть ли автоматическое тестирование работоспособности плагина (Automation Spec / Tests)?",
+        tokens=["IMPLEMENT_SIMPLE_AUTOMATION_TEST", "AutomationTest", "TestSpec"],
+        actionable_insight="Тесты гарантируют быстрый и безболезненный перенос плагина на новые версии UE.",
+    ),
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-046", weight=4, impact="HIGH_VALUE",
+        question="Выведены ли все информационные сообщения в стандартный лог UE (`UE_LOG`)?",
+        tokens=["UE_LOG", "LogTemp", "LogVerbosity", "CustomLogCategory"],
+        actionable_insight="Помогает покупателям самостоятельно диагностировать проблемы по логам.",
+    ),
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-047", weight=4, impact="HIGH_VALUE",
+        question="Предоставляется ли гайд по решению типовых ошибок интеграции (Troubleshooting Guide)?",
+        tokens=["Troubleshooting", "FAQ", "KnownIssues", "CommonErrors"],
+        actionable_insight="Раздел FAQ в документации снижает поток однотипных вопросов в саппорт на 50%.",
+    ),
+    CommercialQuestion(
+        domain="SUPPORT", question_id="COM-048", weight=4, impact="HIGH_VALUE",
+        question="Есть ли поддержка обратной совместимости при обновлении структуры сохранения плагина?",
+        tokens=["Serialize", "VersionCheck", "SaveVersion", "MigrateData"],
+        actionable_insight="Предотвращает потерю данных у покупателей при выходе новой версии плагина.",
+    ),
+
+    # ── 9. EPIC FAB MARKETPLACE EULA & LEGAL SAFETY (6 Questions) ─────────────
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-049", weight=5, impact="HIGH_VALUE",
+        question="Соответствует ли плагин правилам и EULA маркетплейса Epic Fab?",
+        tokens=["LICENSE", "Fab", "Marketplace", "Copyright", "EULA", "EpicGames"],
+        actionable_insight="Гарантирует прохождение быстрой модерации при публикации на маркетплейсе.",
+    ),
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-050", weight=5, impact="RISK",
+        question="Есть ли риск заражения коммерческих игр лицензией GPL/AGPL (Copyleft Risk)?",
+        tokens=["GPL", "AGPL", "General Public License", "Copyleft"],
+        actionable_insight="Удалите GPL код, иначе коммерческие студии отказываются от использования плагина.",
+    ),
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-051", weight=4, impact="HIGH_VALUE",
+        question="Используются ли открытые пермиссивные лицензии для сторонних библиотек (MIT / Apache / BSD)?",
+        tokens=["MIT", "Apache", "BSD", "Permissive"],
+        actionable_insight="Пермиссивные лицензии полностью безопасны для использования в коммерческих играх.",
+    ),
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-052", weight=4, impact="HIGH_VALUE",
+        question="Чисты ли авторские права на все включенные графические и звуковые ассеты?",
+        tokens=["CC0", "RoyaltyFree", "CustomAsset", "CleanRights"],
+        actionable_insight="Защищает автора и покупателей от претензий правообладателей.",
+    ),
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-053", weight=4, impact="HIGH_VALUE",
+        question="Отсутствует ли скрытый сбор персональных данных или незаявленная телеметрия?",
+        tokens=["Telemetry", "Analytics", "Privacy", "GDPR", "NoTracking"],
+        actionable_insight="Чистота от сбора данных — важное требование для корпоративных клиентов.",
+    ),
+    CommercialQuestion(
+        domain="LEGAL", question_id="COM-054", weight=4, impact="HIGH_VALUE",
+        question="Указан ли лицензионный файл в корне каждой папки модуля плагина?",
+        tokens=["LICENSE.txt", "License.md", "CopyrightNotice"],
+        actionable_insight="Юридическая четкость повышает доверие крупных коммерческих покупателей.",
+    ),
+
+    # ── 10. COMMUNITY SOCIAL PROOF & B2B ENTERPRISE UPSELL (6 Questions) ───────
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-055", weight=5, impact="HIGH_VALUE",
+        question="Есть ли ссылка на активный Discord сервер или форум поддержки сообщества?",
+        tokens=["Discord", "Community", "Support", "Forum", "JoinDiscord"],
+        actionable_insight="Сообщество в Discord повышает доверие и дает платформу для допродаж.",
+    ),
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-056", weight=4, impact="HIGH_VALUE",
+        question="Есть ли публичный RoadMap развития плагина (Trello / GitHub Projects)?",
+        tokens=["Roadmap", "Trello", "FutureFeatures", "Planned"],
+        actionable_insight="Открытый роадмап показывает покупателям, что проект активно развивается.",
+    ),
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-057", weight=4, impact="HIGH_VALUE",
+        question="Собираются ли публичные отзывы и кейсы использования в реальных выпущенных играх?",
+        tokens=["Showcase", "UsedIn", "GamesMadeWith", "Testimonials"],
+        actionable_insight="Демонстрация известных игр, использующих плагин — сильнейший фактор продаж.",
+    ),
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-058", weight=4, impact="HIGH_VALUE",
+        question="Предлагается ли услуга индивидуальной кастомизации плагина под нужды заказчика?",
+        tokens=["CustomDevelopment", "Services", "Freelance", "HireUs"],
+        actionable_insight="Услуги кастомизации могут приносить от $2,000 до $10,000 с одного клиента.",
+    ),
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-059", weight=4, impact="HIGH_VALUE",
+        question="Есть ли реферальная или партнерская программа для блогеров и разработчиков?",
+        tokens=["Affiliate", "PartnerProgram", "Referral", "Promote"],
+        actionable_insight="Партнерка стимулирует ютуберов делать обзоры на ваш плагин.",
+    ),
+    CommercialQuestion(
+        domain="COMMUNITY", question_id="COM-060", weight=4, impact="HIGH_VALUE",
+        question="Опубликованы ли исходники примера интеграционного проекта на GitHub?",
+        tokens=["SampleProject", "GitHubRepo", "DemoRepository"],
+        actionable_insight="Готовый открытый пример проекта позволяет покупателю оценить плагин до покупки.",
     ),
 ]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Search Patterns
-# ─────────────────────────────────────────────────────────────────────────────
-PATTERNS = {
-    "COM-001": ["Enterprise", "VirtualProduction", "VR", "Simulator", "Multiplayer"],
-    "COM-002": ["Pro", "Free", "Commercial", "License", "Paid", "Premium"],
-    "COM-003": ["iOS", "Android", "PS5", "Xbox", "Switch", "Mobile"],
-    "COM-004": ["BlueprintCallable", "BlueprintPure", "BlueprintType", "BlueprintAssignable"],
-    "COM-005": ["UMG", "Widget", "UserWidget", "Slate", "Style", "Theme"],
-    "COM-006": ["EditorUtilityWidget", "EUW", "EditorSubsystem"],
-    "COM-007": ["Demo", "Example", "Map", "Content", "Sample"],
-    "COM-008": ["README", "Doc", "Tutorial", "Guide", "Wiki"],
-    "COM-009": ["Material", "MaterialInstance", "Shader", "HLSL"],
-    "COM-010": ["Standalone", "SelfContained", "Simple"],
-    "COM-011": ["Private/", "Internal/", "UnrealEngine/"],
-    "COM-012": ["LICENSE", "Fab", "Marketplace", "Copyright", "EULA"],
-    "COM-013": ["GPL", "AGPL", "General Public License"],
-    "COM-014": ["Hours", "Save", "Performance", "Optimization"],
-    "COM-015": ["Discord", "Community", "Support", "Forum"],
-}
-
-
-def scan_commercial_perspective(root: Path, idx: IndexStoreAdapter) -> list[CommercialMetric]:
-    """Scan UE plugin for commercial, business, UX, and non-technical readiness."""
-    for metric in COMMERCIAL_METRICS:
-        pats = PATTERNS.get(metric.metric_id, [])
+def audit_unreal_commercial(root: Path, idx: IndexStoreAdapter) -> list[CommercialQuestion]:
+    """Scan Unreal Engine plugin for 60+ commercial, business, UX, and non-technical metrics."""
+    for q in COMMERCIAL_QUESTIONS:
         hits = set()
 
-        if metric.metric_id == "COM-007":
+        if q.question_id == "COM-031":
             demo_maps = list(root.rglob("*.umap")) + list(root.rglob("*Demo*")) + list(root.rglob("*Example*"))
             if demo_maps:
                 hits.update(str(f.relative_to(root)) for f in demo_maps[:4])
 
-        if metric.metric_id == "COM-008":
+        if q.question_id == "COM-032":
             docs = list(root.glob("*.md")) + list(root.rglob("*.md")) + list(root.rglob("*.txt"))
             if docs:
                 hits.update(str(f.relative_to(root)) for f in docs[:4])
 
-        for pat in pats:
+        for token in q.tokens:
             try:
-                res = idx.search_code(pat, limit=3)
+                res = idx.search_code(token, limit=3)
                 for r in res:
                     if r.path and not any(x in r.path for x in ("Binaries", "Intermediate", "Saved", ".git")):
                         hits.add(r.path)
             except Exception:
                 pass
 
-        metric.evidence = sorted(list(hits))[:4]
-        metric.found = len(metric.evidence) > 0
+        q.evidence = sorted(list(hits))[:4]
+        q.found = len(q.evidence) > 0
 
-    return COMMERCIAL_METRICS
+    return COMMERCIAL_QUESTIONS
 
 
-def calculate_commercial_score(metrics: list[CommercialMetric]) -> tuple[int, str, str, str]:
+def calculate_commercial_score(questions: list[CommercialQuestion]) -> tuple[int, str, str, str]:
     """Calculate Commercial Readiness Score (0-100), Publisher Grade, and ARR Forecast."""
-    base_score = 40
-    for m in metrics:
-        if m.found:
-            base_score += m.score_delta
+    total_weight = sum(q.weight for q in questions)
+    found_weight = sum(q.weight for q in questions if q.found)
 
-    score = max(0, min(100, base_score))
+    score = int((found_weight / total_weight) * 100) if total_weight > 0 else 0
 
     if score >= 85:
         grade = "A+ (Fab Marketplace Commercial Hit — Turnkey Bestseller)"
@@ -254,13 +495,13 @@ def calculate_commercial_score(metrics: list[CommercialMetric]) -> tuple[int, st
     return score, grade, status, arr
 
 
-def print_report(project: str, root: Path, metrics: list[CommercialMetric],
+def print_report(project: str, root: Path, questions: list[CommercialQuestion],
                  stats: dict, elapsed: float, report_path: Path) -> None:
-    found = [m for m in metrics if m.found]
-    score, grade, status, arr = calculate_commercial_score(metrics)
+    found = [q for q in questions if q.found]
+    score, grade, status, arr = calculate_commercial_score(questions)
 
     lines = [
-        f"# 💼 Commercial, Business & UX Publisher Audit 2.0 — {project}",
+        f"# 💼 Commercial, Business & UX Publisher Audit 3.0 (60Q) — {project}",
         f"> {root} · {stats.get('total_files', 0):,} files · {elapsed:.2f}s · {date.today()}",
         "",
         "## 📊 Commercial & Publisher Summary",
@@ -271,24 +512,22 @@ def print_report(project: str, root: Path, metrics: list[CommercialMetric],
         f"| **Publisher Grade** | **{grade}** |",
         f"| **Commercial Status** | **{status}** |",
         f"| **Estimated Fab ARR Forecast** | **{arr}** |",
-        f"| Total Files Scanned | {stats.get('total_files', 0):,} |",
-        f"| Verified Commercial Indicators | {len(found)} |",
+        f"| Total Commercial Questions Audited | {len(questions)} |",
+        f"| Verified Commercial Signals | {len(found)} |",
         "",
-        "## 🔍 Verified Non-Technical Commercial Metrics",
+        "## 🔍 Verified Non-Technical Commercial Questions & Evidence",
         "",
+        "| Domain | Commercial Question | Status | Verified Code Evidence | Publisher Action |",
+        "|---|---|---|---|---|",
     ]
 
-    for m in found:
-        icon = "🟢" if m.impact != "RISK" else "🔴"
-        ev = ", ".join(f"`{e}`" for e in m.evidence[:2])
-        lines.append(f"### {icon} [{m.metric_id}] {m.title} (`{m.dimension}`)")
-        lines.append(f"**Perspective:** {m.description}")
-        lines.append(f"**Code / File Evidence:** {ev}")
-        lines.append(f"**Publisher Action:** {m.actionable_insight}")
-        lines.append("")
+    for q in found:
+        ev = ", ".join(f"`{e}`" for e in q.evidence[:2])
+        lines.append(f"| `{q.domain}` | {q.question} | ✅ FOUND | {ev} | {q.actionable_insight} |")
 
     lines += [
-        "## 🚀 Commercial Scaling & Publisher Strategy",
+        "",
+        "## 🚀 Commercial Scaling & Publisher Strategy Blueprint",
         "",
         "1. **Monetization Structure**: Keep Core plugin open-source on GitHub, sell Pro version with C++ Source on Epic Fab for $79-$149.",
         "2. **Designer Accessibility**: Expand Blueprint nodes for non-programmer game designers (BlueprintCallable).",
@@ -296,20 +535,21 @@ def print_report(project: str, root: Path, metrics: list[CommercialMetric],
         "4. **Enterprise Tier**: Sell Direct B2B Custom Support Contracts ($999/yr) to AAA studios & Virtual Production teams.",
         "",
         "---",
-        f"*Unreal Engine Commercial & Business Publisher Auditor 2.0 · {date.today()}*",
+        f"*Unreal Engine Commercial & Business Publisher Auditor 3.0 · {date.today()}*",
     ]
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
     SEP = "═" * 75
     print(f"\n{SEP}")
-    print(f"  💼 UNREAL ENGINE COMMERCIAL & BUSINESS PUBLISHER AUDITOR 2.0: {project}")
+    print(f"  💼 UNREAL ENGINE COMMERCIAL & BUSINESS PUBLISHER AUDITOR 3.0 (60Q): {project}")
     print(SEP)
     print(f"  Files indexed                 : {stats.get('total_files', 0):,}")
     print(f"  Commercial Readiness Score    : {score} / 100")
     print(f"  Publisher Grade               : {grade}")
     print(f"  Estimated Fab ARR Forecast    : {arr}")
-    print(f"  Verified Commercial Metrics   : {len(found)}")
+    print(f"  Total Commercial Questions    : {len(questions)}")
+    print(f"  Verified Commercial Signals   : {len(found)}")
     print(f"  Audit Speed                   : {elapsed:.3f}s")
     print(f"  Report Saved                  : {report_path}")
     print(f"{SEP}\n")
@@ -336,10 +576,10 @@ def main() -> None:
     t0 = time.perf_counter()
     idx = IndexStoreAdapter()
     stats = idx.rebuild(project_path)
-    metrics = scan_commercial_perspective(project_path, idx)
+    questions = audit_unreal_commercial(project_path, idx)
     elapsed = time.perf_counter() - t0
 
-    print_report(project_name, project_path, metrics, stats, elapsed, report_path)
+    print_report(project_name, project_path, questions, stats, elapsed, report_path)
 
 
 if __name__ == "__main__":

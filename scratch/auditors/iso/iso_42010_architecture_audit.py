@@ -142,11 +142,6 @@ ARCH_CHECKS: list[ISO42010Check] = [
 
 def scan_iso42010(root: Path, idx: IndexStoreAdapter) -> list[ISO42010Check]:
     """Scan codebase for ISO/IEC/IEEE 42010 architecture description evidence using IndexStoreAdapter."""
-    try:
-        idx.rebuild(root)
-    except Exception as e:
-        logger.error(f"Error rebuilding index for path {root}: {e}")
-        return ARCH_CHECKS
 
     for check in ARCH_CHECKS:
         hits: set[str] = set()

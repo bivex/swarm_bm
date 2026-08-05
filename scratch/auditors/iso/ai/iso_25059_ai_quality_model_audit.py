@@ -1,248 +1,254 @@
-#!/usr/bin/env python3
-"""
-╔═══════════════════════════════════════════════════════════════════════════╗
-║   📊 ISO/IEC 25059:2023 AI System Quality Model Auditor (SQuaRE Ext)      ║
-║   BM25 + AST Scanner for AI Software Quality, Robustness & Transparency   ║
-║                                                                           ║
-║   REFERENCE: Elsevier Computer Science Review 54 (2024) 100681            ║
-║   OFFICIAL STANDARD: ISO/IEC 25059:2023 (AI Software Quality Model)        ║
-║   ICS: 35.080 / 35.020 | Committee: ISO/IEC JTC 1/SC 7 & SC 42             ║
-║                                                                           ║
-║   NORMATIVE AI QUALITY CHARACTERISTICS (ISO 25059 & ISO 25010):            ║
-║   - Interaction Capability: User Controllability & Transparency            ║
-║   - Reliability: Robustness of Neural Networks (ISO 24029) & Fail-Safe    ║
-║   - Security: Intervenability & Adversarial Protection                     ║
-║   - Functional Suitability: Functional Adaptability & Correctness         ║
-║   - Safety & Ethics: Algorithmic Harm Prevention & ISO 24027 Bias         ║
-║   - Explainability: SHAP/LIME Interpretability (ISO 6254)                  ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-Usage:
-    python3 scratch/auditors/iso/ai/iso_25059_ai_quality_model_audit.py /path/to/project [ProjectName]
-"""
-from __future__ import annotations
-
-import json
-import re
 import sys
-import time
-from dataclasses import dataclass, field
-from datetime import date
+import os
+import re
 from pathlib import Path
-from typing import Any
+from dataclasses import dataclass, field
+from typing import List, Dict, Tuple
+from collections import defaultdict
 
+# Setup path for BM25 IndexStoreAdapter
 root_dir = next(p for p in Path(__file__).resolve().parents if (p / "bm25_server_FS_for-AI-asking").exists())
 sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(root_dir / "bm25_server_FS_for-AI-asking"))
-
 from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
-
 @dataclass
-class ISO25059Control:
-    characteristic: str      # Interaction Capability / Reliability / Security / Functional Suitability / Safety / Explainability
-    control_id: str          # ISO-25059-01 .. 06
-    title: str
-    impact: str              # POSITIVE / RISK
-    score_delta: int
-    description: str
-    evidence_files: list[str] = field(default_factory=list)
-    remediation: str = ""
+class ISO25059Check:
+    clause_id: str
+    clause_ref: str
+    normative_text: str
+    category: str
+    weight: int
+    search_terms: List[str]
+    evidence_files: List[str] = field(default_factory=list)
     found: bool = False
+    confidence: str = "NONE"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ISO/IEC 25059:2023 AI Quality Model Matrix (SQuaRE Extension)
-# ─────────────────────────────────────────────────────────────────────────────
-ISO25059_CONTROLS: list[ISO25059Control] = [
-    ISO25059Control(
-        characteristic="Interaction Capability",
-        control_id="ISO-25059-01",
-        title="User Controllability & System Transparency",
-        impact="POSITIVE", score_delta=+20,
-        description="Users can override model decisions, adjust hyperparameters, or view confidence thresholds.",
-        remediation="Implement user override controls, confidence scores, and model decision transparency APIs.",
+CHECKS = [
+    ISO25059Check(
+        clause_id="4.1",
+        clause_ref="Functional suitability",
+        normative_text="Assess functional correctness, completeness, appropriateness, and AI task performance.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["functional correctness", "task performance", "completeness", "appropriateness", "functional testing", "test case", "accuracy", "precision", "recall", "f1 score", "functional suitability", "system test"]
     ),
-    ISO25059Control(
-        characteristic="Reliability & Robustness",
-        control_id="ISO-25059-02",
-        title="AI Neural Network Robustness & Fallback Handling (ISO 24029)",
-        impact="POSITIVE", score_delta=+20,
-        description="System withstands out-of-distribution noise, adversarial inputs, and degraded network feeds.",
-        remediation="Integrate noise injection testing, adversarial defenses, and graceful fallback modes.",
+    ISO25059Check(
+        clause_id="4.2",
+        clause_ref="Performance efficiency",
+        normative_text="Assess time behaviour, resource utilization, capacity, and inference latency.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["time behaviour", "resource utilization", "capacity", "inference latency", "response time", "throughput", "benchmark", "performance test", "profiling", "latency evaluation", "memory usage", "cpu usage"]
     ),
-    ISO25059Control(
-        characteristic="Security & Intervenability",
-        control_id="ISO-25059-03",
-        title="Human Intervenability & Prompt Injection Protection",
-        impact="POSITIVE", score_delta=+15,
-        description="Human operator can intervene or halt autonomous AI actions; system sanitizes prompt injections.",
-        remediation="Add kill-switch / manual intervention hooks and prompt input sanitization filters.",
+    ISO25059Check(
+        clause_id="4.3",
+        clause_ref="Compatibility",
+        normative_text="Co-existence, interoperability with other AI/non-AI systems.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["compatibility", "co-existence", "interoperability", "api integration", "data format", "system integration", "protocol", "interface testing", "backward compatibility", "cross-platform", "integration test"]
     ),
-    ISO25059Control(
-        characteristic="Functional Adaptability",
-        control_id="ISO-25059-04",
-        title="Functional Adaptability & Continuous Model Re-training",
-        impact="POSITIVE", score_delta=+15,
-        description="AI model adapts to shifting domain contexts, fine-tuning, or online streaming updates.",
-        remediation="Support dynamic model swap, adapter loading (LoRA), or continuous learning pipelines.",
+    ISO25059Check(
+        clause_id="4.4",
+        clause_ref="Usability",
+        normative_text="Appropriateness recognizability, learnability, operability, user error protection, accessibility.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["usability", "recognizability", "learnability", "operability", "user error protection", "accessibility", "user experience", "ux design", "ui testing", "user feedback", "intuitive", "user guide"]
     ),
-    ISO25059Control(
-        characteristic="Explainability & Interpretability",
-        control_id="ISO-25059-05",
-        title="Model Interpretability & Feature Attribution (ISO 6254 / SHAP)",
-        impact="POSITIVE", score_delta=+15,
-        description="System generates human-understandable explanations or feature importance rankings.",
-        remediation="Implement SHAP, LIME, attention maps, or text explanation generators.",
+    ISO25059Check(
+        clause_id="4.5",
+        clause_ref="Reliability",
+        normative_text="Maturity, availability, fault tolerance, recoverability, and consistency under different inputs.",
+        category="ISO25010_BASE",
+        weight=15,
+        search_terms=["maturity", "availability", "fault tolerance", "recoverability", "consistency", "reliability testing", "uptime", "failover", "error handling", "recovery time", "system stability"]
     ),
-    ISO25059Control(
-        characteristic="Safety & Bias Mitigation",
-        control_id="ISO-25059-06",
-        title="Safety Guardrails & Algorithmic Bias Mitigation (ISO 24027)",
-        impact="POSITIVE", score_delta=+15,
-        description="AI system evaluates equalized odds, demographic parity, and implements safety guardrails.",
-        remediation="Enforce output guardrails (Guardrails AI, NeMo) and demographic parity audits.",
+    ISO25059Check(
+        clause_id="4.6",
+        clause_ref="Security",
+        normative_text="Confidentiality, integrity, non-repudiation, accountability, authenticity, resistance to adversarial attacks.",
+        category="ISO25010_BASE",
+        weight=15,
+        search_terms=["confidentiality", "integrity", "non-repudiation", "accountability", "authenticity", "adversarial attack", "security test", "vulnerability", "encryption", "access control", "authentication", "threat model"]
     ),
+    ISO25059Check(
+        clause_id="4.7",
+        clause_ref="Maintainability",
+        normative_text="Modularity, reusability, analysability, modifiability, testability, retrain-ability, model updating.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["modularity", "reusability", "analysability", "modifiability", "testability", "retrain-ability", "model updating", "code refactoring", "technical debt", "maintainability index", "continuous training", "pipeline update"]
+    ),
+    ISO25059Check(
+        clause_id="4.8",
+        clause_ref="Portability",
+        normative_text="Adaptability, installability, replaceability.",
+        category="ISO25010_BASE",
+        weight=10,
+        search_terms=["adaptability", "installability", "replaceability", "portability", "platform independence", "environment setup", "container", "docker", "kubernetes", "migration", "cross-platform support"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.1",
+        clause_ref="Fairness",
+        normative_text="Group fairness, individual fairness, counterfactual fairness.",
+        category="FAIRNESS",
+        weight=15,
+        search_terms=["group fairness", "individual fairness", "counterfactual fairness", "bias mitigation", "demographic parity", "equalized odds", "disparate impact", "fairness metric", "bias detection", "fairness assessment", "unbiased"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.2",
+        clause_ref="Explainability",
+        normative_text="Local and global explainability, completeness.",
+        category="EXPLAINABILITY",
+        weight=15,
+        search_terms=["local explainability", "global explainability", "completeness", "shap", "lime", "feature importance", "interpretability", "explanation generation", "explainable ai", "xai", "model transparency"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.3",
+        clause_ref="Robustness",
+        normative_text="Distribution shift, adversarial robustness.",
+        category="ROBUSTNESS",
+        weight=15,
+        search_terms=["distribution shift", "adversarial robustness", "concept drift", "data shift", "adversarial attack", "robustness testing", "out of distribution", "ood detection", "perturbation", "noise tolerance", "resilience"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.4",
+        clause_ref="Transparency",
+        normative_text="Transparency of training data, algorithm, model structure.",
+        category="AI_QUALITY",
+        weight=15,
+        search_terms=["transparency", "training data", "algorithm", "model structure", "data provenance", "model documentation", "model card", "data sheet", "open source", "traceability", "audit log"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.5",
+        clause_ref="Safety",
+        normative_text="Safety impact assessment, hazard identification.",
+        category="SAFETY",
+        weight=15,
+        search_terms=["safety impact", "hazard identification", "safety assessment", "risk evaluation", "functional safety", "fail-safe", "emergency stop", "human safety", "hazard analysis", "safety critical", "safe operation"]
+    ),
+    ISO25059Check(
+        clause_id="4.9.6",
+        clause_ref="Autonomy level",
+        normative_text="Degree of human oversight required.",
+        category="AI_QUALITY",
+        weight=10,
+        search_terms=["autonomy level", "human oversight", "human in the loop", "hitl", "human on the loop", "automation degree", "manual override", "supervisor control", "autonomous operation", "decision boundary"]
+    )
 ]
 
+def calculate_score(check: ISO25059Check, matches: int) -> Tuple[int, str, str]:
+    term_count = len(check.search_terms)
+    
+    if matches >= term_count * 0.5:
+        return int(check.weight * 1.0), "HIGH", f"Strong evidence ({matches}/{term_count} terms)"
+    elif matches >= 2:
+        return int(check.weight * 0.6), "MEDIUM", f"Partial evidence ({matches}/{term_count} terms)"
+    elif matches >= 1:
+        return int(check.weight * 0.3), "LOW", f"Weak evidence ({matches}/{term_count} terms)"
+    else:
+        return 0, "NONE", "No evidence found"
 
-PATTERNS = {
-    "ISO-25059-01": ["confidence_score", "user_override", "transparency", "controllability"],
-    "ISO-25059-02": ["robustness", "fallback_model", "out_of_distribution", "adversarial_defense"],
-    "ISO-25059-03": ["intervenability", "kill_switch", "human_in_the_loop", "prompt_guard"],
-    "ISO-25059-04": ["functional_adaptability", "lora_adapter", "fine_tuning", "online_learning"],
-    "ISO-25059-05": ["explainability", "interpretability", "shap", "lime", "feature_importance"],
-    "ISO-25059-06": ["bias_mitigation", "guardrail", "demographic_parity", "safety_filter"],
-}
-
-
-def scan_iso25059(root: Path, idx: IndexStoreAdapter) -> list[ISO25059Control]:
-    """Scan codebase for ISO/IEC 25059:2023 AI System Quality Model controls."""
-    for ctrl in ISO25059_CONTROLS:
-        pats = PATTERNS.get(ctrl.control_id, [])
-        hits = set()
-
-        for pat in pats:
+def scan_repository(path: str, checks: List[ISO25059Check]):
+    idx = IndexStoreAdapter()
+    idx.rebuild(Path(path))
+    for check in checks:
+        matches_found = 0
+        for term in check.search_terms:
             try:
-                res = idx.search_code(pat, limit=3)
-                for r in res:
-                    if r.path and not any(x in r.path for x in ("node_modules", ".git", "vendor", "__pycache__")):
-                        hits.add(r.path)
+                results = idx.search_code(term, limit=5)
+                if results:
+                    matches_found += 1
+                    for r in results:
+                        fp = getattr(r, 'path', None)
+                        if fp and not any(x in fp for x in ('.git', '__pycache__', 'node_modules')):
+                            if fp not in check.evidence_files:
+                                check.evidence_files.append(fp)
             except Exception:
                 pass
 
-        ctrl.evidence_files = sorted(list(hits))[:4]
-        ctrl.found = len(ctrl.evidence_files) > 0
+        check.found = len(check.evidence_files) > 0
+        score, confidence, _ = calculate_score(check, matches_found)
+        check.confidence = confidence
 
-    return ISO25059_CONTROLS
-
-
-def calculate_iso25059_score(controls: list[ISO25059Control]) -> tuple[int, str, str]:
-    """Calculate ISO 25059 AI Quality Score (0-100) and Grade."""
-    score = sum(c.score_delta for c in controls if c.found)
-
-    if score >= 85:
-        grade = "A+ (ISO 25059 AI Quality Model Certified)"
-        status = "🟢 FULLY COMPLIANT — Production AI Quality, Robustness & Explainability"
-    elif score >= 60:
-        grade = "A (High AI Quality Readiness)"
-        status = "🟢 HIGH — Compliant with Minor Explainability / Adaptability Features Missing"
-    elif score >= 40:
-        grade = "B (Moderate Quality Debt)"
-        status = "🟡 MEDIUM — Requires Human Intervenability & Neural Robustness Testing"
-    else:
-        grade = "C/F (AI Quality Hazard)"
-        status = "🔴 NON-COMPLIANT — Lacks Transparency, Safety Filters or User Controllability"
-
-    return score, grade, status
-
-
-def print_report(project: str, root: Path, controls: list[ISO25059Control],
-                 stats: dict, elapsed: float, report_path: Path) -> None:
-    found = [c for c in controls if c.found]
-    score, grade, status = calculate_iso25059_score(controls)
-
-    lines = [
-        f"# 📊 ISO/IEC 25059:2023 AI System Quality Model Audit — {project}",
-        f"> Reference: Computer Science Review 54 (2024) 100681 · Committee: ISO/IEC JTC 1/SC 7 & SC 42",
-        f"> {root} · {stats.get('total_files', 0):,} files · {elapsed:.2f}s · {date.today()}",
-        "",
-        "## 📊 ISO 25059 AI Quality Model Summary",
-        "",
-        f"| Metric | Value |",
-        f"|---|---|",
-        f"| **ISO 25059 AI Quality Score** | **{score} / 100** |",
-        f"| **AI System Quality Grade** | **{grade}** |",
-        f"| **Compliance Status** | **{status}** |",
-        f"| Total Files Scanned | {stats.get('total_files', 0):,} |",
-        f"| Verified AI Quality Characteristics | {len(found)} / {len(controls)} |",
-        "",
-        "## 🔍 Verified ISO/IEC 25059:2023 Normative AI Quality Characteristics",
-        "",
-        "| Characteristic | Control ID | Control Title | Status | Verified Code Evidence | Remediation Action |",
-        "|---|---|---|---|---|---|",
-    ]
-
-    for c in found:
-        ev = ", ".join(f"`{e}`" for e in c.evidence_files[:2])
-        lines.append(f"| `{c.characteristic}` | `{c.control_id}` | {c.title} | ✅ FOUND | {ev} | {c.remediation} |")
-
-    lines += [
-        "",
-        "## 🚀 ISO/IEC 25059 AI System Quality Remediation Blueprint",
-        "",
-        "1. **Interaction Capability**: Implement user decision overrides and confidence score transparency.",
-        "2. **Reliability & Robustness**: Conduct neural network robustness testing under out-of-distribution noise (ISO 24029).",
-        "3. **Security & Intervenability**: Provide manual kill-switches and prompt injection protection filters.",
-        "4. **Functional Adaptability**: Enable dynamic adapter loading (LoRA) and continuous fine-tuning pipelines.",
-        "5. **Explainability**: Integrate SHAP, LIME, or attention map generators for model predictions (ISO 6254).",
-        "6. **Safety & Ethics**: Enforce output guardrails (Guardrails AI) and demographic parity audits (ISO 24027).",
-        "",
-        "---",
-        f"*ISO/IEC 25059:2023 AI System Quality Model Auditor · {date.today()}*",
-    ]
-
-    report_path.write_text("\n".join(lines), encoding="utf-8")
-
-    SEP = "═" * 75
-    print(f"\n{SEP}")
-    print(f"  📊 ISO/IEC 25059:2023 AI SYSTEM QUALITY MODEL AUDITOR: {project}")
-    print(SEP)
-    print(f"  Files indexed               : {stats.get('total_files', 0):,}")
-    print(f"  ISO 25059 AI Quality Score  : {score} / 100")
-    print(f"  AI Quality Grade            : {grade}")
-    print(f"  Verified Quality Controls   : {len(found)} / {len(controls)}")
-    print(f"  Audit Speed                 : {elapsed:.3f}s")
-    print(f"  Report Saved                : {report_path}")
-    print(f"{SEP}\n")
-
-
-def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python3 scratch/auditors/iso/ai/iso_25059_ai_quality_model_audit.py /path/to/project [ProjectName]")
-        sys.exit(1)
-
-    project_path = Path(sys.argv[1]).expanduser().resolve()
-    if not project_path.exists():
-        print(f"❌ Path not found: {project_path}")
-        sys.exit(1)
-
-    project_name = sys.argv[2] if len(sys.argv) > 2 else project_path.name
-
+def print_report(checks: List[ISO25059Check], project_name: str):
     app_data = Path.home() / ".gemini" / "antigravity-cli" / "brain" / "b1a8b172-4960-462a-bad1-43d8b7e774ad"
     app_data.mkdir(parents=True, exist_ok=True)
+    
+    safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', project_name.lower())
+    report_file = app_data / f"iso_25059_{safe_name}.md"
+    
+    total_score = 0
+    max_score = sum(c.weight for c in checks)
+    
+    cat_scores = defaultdict(int)
+    cat_max = defaultdict(int)
+    
+    for c in checks:
+        if c.confidence == "HIGH": s = c.weight * 1.0
+        elif c.confidence == "MEDIUM": s = c.weight * 0.6
+        elif c.confidence == "LOW": s = c.weight * 0.3
+        else: s = 0
+        
+        total_score += s
+        cat_scores[c.category] += s
+        cat_max[c.category] += c.weight
+    
+    with open(report_file, "w") as f:
+        f.write(f"# ISO/IEC 25059 AI Quality Model Audit Report: {project_name}\n\n")
+        
+        f.write("## Executive Summary\n")
+        f.write(f"**Total Quality Score:** {int(total_score)} / {max_score}\n\n")
+        
+        f.write("## Category Breakdown\n")
+        for cat in sorted(cat_max.keys()):
+            f.write(f"- **{cat}:** {int(cat_scores[cat])} / {cat_max[cat]}\n")
+            
+        f.write("\n## Detailed Findings\n")
+        for c in checks:
+            f.write(f"### {c.clause_id} - {c.clause_ref}\n")
+            f.write(f"- **Category:** {c.category}\n")
+            f.write(f"- **Confidence:** {c.confidence}\n")
+            f.write(f"- **Requirement:** {c.normative_text}\n")
+            if c.evidence_files:
+                f.write("- **Evidence Files:**\n")
+                for ev in c.evidence_files[:5]:
+                    f.write(f"  - `{ev}`\n")
+            else:
+                f.write("- **Evidence Files:** None found\n")
+            f.write("\n")
+            
+        f.write("## Gap Analysis & Remediation Roadmap\n")
+        f.write("1. Review LOW and NONE confidence areas.\n")
+        f.write("2. Implement missing quality characteristics.\n")
+        f.write("3. Add documentation and automated tests for AI-specific quality attributes.\n")
 
-    safe_name = re.sub(r"[^a-z0-9_]", "_", project_name.lower())
-    report_path = app_data / f"iso_25059_{safe_name}.md"
+    SEP = "═" * 78
+    score_pct = int((total_score / max_score) * 100) if max_score else 0
+    if score_pct >= 75: grade = "A  (High AI Quality)"
+    elif score_pct >= 50: grade = "B  (Partial Quality)"
+    elif score_pct >= 25: grade = "C  (Basic Quality)"
+    else: grade = "F  (Non-Conformant)"
+    print(f"\n{SEP}")
+    print(f"  ISO/IEC 25059:2023 AI QUALITY MODEL AUDIT: {project_name}")
+    print(SEP)
+    print(f"  ISO 25059 Quality Score       : {int(total_score)} / {max_score} ({score_pct}%)")
+    print(f"  Conformance Grade             : {grade}")
+    print(f"  Report                        : {report_file}")
+    print(f"{SEP}\n")
 
-    t0 = time.perf_counter()
-    idx = IndexStoreAdapter()
-    stats = idx.rebuild(project_path)
-    controls = scan_iso25059(project_path, idx)
-    elapsed = time.perf_counter() - t0
-
-    print_report(project_name, project_path, controls, stats, elapsed, report_path)
-
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python iso_25059_ai_quality_model_audit.py <repo_path> <project_name>")
+        sys.exit(1)
+        
+    repo_path = sys.argv[1]
+    project_name = sys.argv[2]
+    
+    scan_repository(repo_path, CHECKS)
+    print_report(CHECKS, project_name)
 
 if __name__ == "__main__":
     main()

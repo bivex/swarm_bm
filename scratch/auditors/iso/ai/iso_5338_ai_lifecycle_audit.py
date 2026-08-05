@@ -1,248 +1,284 @@
-#!/usr/bin/env python3
-"""
-╔═══════════════════════════════════════════════════════════════════════════╗
-║   📊 ISO/IEC 5338:2023 AI System Life Cycle Processes Auditor             ║
-║   BM25 + AST Scanner for AI Life Cycle, ML Pipelines & Quality Processes  ║
-║                                                                           ║
-║   REFERENCE: Elsevier Computer Science Review 54 (2024) 100681            ║
-║   OFFICIAL STANDARD: ISO/IEC 5338:2023 (AI System Life Cycle Processes)   ║
-║   ICS: 35.020 / 35.080 | Committee: ISO/IEC JTC 1/SC 42 & SC 7             ║
-║                                                                           ║
-║   NORMATIVE AI LIFE CYCLE PROCESSES (ISO 5338 & ISO 12207 / 15288):       ║
-║   - Knowledge Acquisition Process: Storing & extracting AI domain rules   ║
-║   - AI Data Engineering Process: Formatting, cleaning & preparing datasets║
-║   - Continuous Validation Process: Post-deployment model monitoring       ║
-║   - ML Pipeline (ISO 23053): Data Prep -> Modelling -> V&V -> Deployment   ║
-║   - Testing Guidelines (ISO 29119-11 / 16): ML Systems Testing             ║
-║   - Continuous Integration / Deployment (CI/CD): Automated AI testing     ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-Usage:
-    python3 scratch/auditors/iso/ai/iso_5338_ai_lifecycle_audit.py /path/to/project [ProjectName]
-"""
-from __future__ import annotations
-
-import json
-import re
 import sys
-import time
-from dataclasses import dataclass, field
-from datetime import date
+import os
+import re
 from pathlib import Path
-from typing import Any
+from dataclasses import dataclass, field
+from typing import List, Dict, Tuple
+from collections import defaultdict
 
+# Setup path for BM25 IndexStoreAdapter
 root_dir = next(p for p in Path(__file__).resolve().parents if (p / "bm25_server_FS_for-AI-asking").exists())
 sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(root_dir / "bm25_server_FS_for-AI-asking"))
-
 from swarm_mcp.infrastructure.index_store_adapter import IndexStoreAdapter
 
-
 @dataclass
-class ISO5338Control:
-    process_group: str       # Knowledge / Data Engineering / Continuous Validation / ML Pipeline / Testing / CI-CD
-    control_id: str          # ISO-5338-01 .. 06
-    title: str
-    impact: str              # POSITIVE / RISK
-    score_delta: int
-    description: str
-    evidence_files: list[str] = field(default_factory=list)
-    remediation: str = ""
+class ISO5338Check:
+    clause_id: str
+    clause_ref: str
+    normative_text: str
+    category: str
+    weight: int
+    search_terms: List[str]
+    evidence_files: List[str] = field(default_factory=list)
     found: bool = False
+    confidence: str = "NONE"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ISO/IEC 5338:2023 AI Life Cycle Matrix
-# ─────────────────────────────────────────────────────────────────────────────
-ISO5338_CONTROLS: list[ISO5338Control] = [
-    ISO5338Control(
-        process_group="Knowledge Acquisition",
-        control_id="ISO-5338-01",
-        title="Knowledge Acquisition Process & Domain Ontology Management",
-        impact="POSITIVE", score_delta=+15,
-        description="Process obtains, formats, and stores domain knowledge and expert rules for the AI model.",
-        remediation="Document Knowledge Acquisition pipelines and maintain domain ontology schemas.",
+CHECKS = [
+    ISO5338Check(
+        clause_id="5.1",
+        clause_ref="AI system feasibility analysis",
+        normative_text="Assess feasibility, stakeholder needs, and system requirements for AI concept processes.",
+        category="CONCEPT",
+        weight=10,
+        search_terms=["feasibility analysis", "stakeholder needs", "system requirements", "concept phase", "ai feasibility", "business case", "technical feasibility", "resource estimation", "roi", "initial assessment", "stakeholder requirements"]
     ),
-    ISO5338Control(
-        process_group="AI Data Engineering",
-        control_id="ISO-5338-02",
-        title="AI Data Engineering Process & Dataset Preparation",
-        impact="POSITIVE", score_delta=+20,
-        description="Dedicated data engineering pipeline formats, cleans, and structures training/testing datasets.",
-        remediation="Establish an automated AI Data Engineering pipeline with validation scripts.",
+    ISO5338Check(
+        clause_id="5.2",
+        clause_ref="Stakeholder needs and requirements definition",
+        normative_text="Stakeholder needs and requirements definition.",
+        category="CONCEPT",
+        weight=10,
+        search_terms=["stakeholder needs", "requirements definition", "user requirements", "business requirements", "stakeholder interview", "needs analysis", "requirements gathering", "use case", "persona", "stakeholder requirement"]
     ),
-    ISO5338Control(
-        process_group="Continuous Validation",
-        control_id="ISO-5338-03",
-        title="Continuous Validation Process (Post-Deployment Model Drift)",
-        impact="POSITIVE", score_delta=+20,
-        description="Production monitoring tracks model accuracy, concept drift, and data shift in real-time.",
-        remediation="Implement Continuous Validation hooks (Evidently AI, Prometheus metrics) for live models.",
+    ISO5338Check(
+        clause_id="5.3",
+        clause_ref="AI system requirements definition",
+        normative_text="AI system requirements definition.",
+        category="CONCEPT",
+        weight=15,
+        search_terms=["ai system requirements", "system requirements specification", "functional requirements", "non-functional requirements", "srs", "ai requirement", "system spec", "requirement tracing", "requirement validation"]
     ),
-    ISO5338Control(
-        process_group="ML Pipeline Framework",
-        control_id="ISO-5338-04",
-        title="Structured ML Pipeline Architecture (ISO 23053 Alignment)",
-        impact="POSITIVE", score_delta=+15,
-        description="End-to-end pipeline enforces Data Prep -> Modelling -> V&V -> Deployment stages.",
-        remediation="Structure ML workflows using orchestrators (Prefect, Airflow, Kubeflow, PipeCat).",
+    ISO5338Check(
+        clause_id="6.1",
+        clause_ref="AI data management",
+        normative_text="Data acquisition, data preparation, data quality verification.",
+        category="DEVELOPMENT",
+        weight=15,
+        search_terms=["data acquisition", "data preparation", "data quality", "data verification", "data cleansing", "data pipeline", "etl", "dataset management", "data governance", "data annotation", "data provenance", "data lineage"]
     ),
-    ISO5338Control(
-        process_group="AI Software Testing",
-        control_id="ISO-5338-05",
-        title="AI Systems Testing Guidelines (ISO/IEC TR 29119-11 / Part 16)",
-        impact="POSITIVE", score_delta=+15,
-        description="Software testing suite incorporates metamorphic testing, neuron coverage, or ML assertion tests.",
-        remediation="Integrate ML testing suites (pytest, metamorphic tests, assertion checks).",
+    ISO5338Check(
+        clause_id="6.2",
+        clause_ref="AI model management",
+        normative_text="Model development, training, evaluation, model versioning.",
+        category="DEVELOPMENT",
+        weight=15,
+        search_terms=["model development", "model training", "model evaluation", "model versioning", "hyperparameter tuning", "mlflow", "model registry", "model artifact", "training script", "validation set", "test set", "model checkpoint"]
     ),
-    ISO5338Control(
-        process_group="Automated CI/CD",
-        control_id="ISO-5338-06",
-        title="Automated Continuous Integration & Continuous Deployment for AI",
-        impact="POSITIVE", score_delta=+15,
-        description="CI/CD workflows automatically trigger model regression testing, linting, and build verification.",
-        remediation="Configure GitHub Actions / GitLab CI workflows for automated model builds and tests.",
+    ISO5338Check(
+        clause_id="6.3",
+        clause_ref="AI system design",
+        normative_text="Architecture, integration design.",
+        category="DEVELOPMENT",
+        weight=15,
+        search_terms=["architecture design", "integration design", "system architecture", "high level design", "low level design", "design pattern", "api design", "component diagram", "sequence diagram", "design document"]
     ),
+    ISO5338Check(
+        clause_id="6.4",
+        clause_ref="AI system verification",
+        normative_text="Unit testing, integration testing, system testing.",
+        category="DEVELOPMENT",
+        weight=15,
+        search_terms=["unit testing", "integration testing", "system testing", "test plan", "test execution", "test report", "verification", "code coverage", "automated testing", "regression testing", "mock"]
+    ),
+    ISO5338Check(
+        clause_id="6.5",
+        clause_ref="AI system validation",
+        normative_text="Acceptance testing, operational testing.",
+        category="DEVELOPMENT",
+        weight=15,
+        search_terms=["acceptance testing", "operational testing", "validation", "user acceptance test", "uat", "field test", "beta test", "pilot", "validation report", "operational validation"]
+    ),
+    ISO5338Check(
+        clause_id="7.1",
+        clause_ref="AI system release management",
+        normative_text="AI system release management.",
+        category="DEPLOYMENT",
+        weight=10,
+        search_terms=["release management", "release plan", "release notes", "version control", "deployment package", "release candidate", "go/no-go decision", "release process", "change management", "release cycle"]
+    ),
+    ISO5338Check(
+        clause_id="7.2",
+        clause_ref="AI system deployment",
+        normative_text="AI system installation, configuration, and release management.",
+        category="DEPLOYMENT",
+        weight=15,
+        search_terms=["system deployment", "installation", "configuration", "deployment pipeline", "ci/cd", "containerization", "kubernetes", "docker", "production rollout", "deployment strategy", "canary release"]
+    ),
+    ISO5338Check(
+        clause_id="7.3",
+        clause_ref="AI system operation",
+        normative_text="Monitoring, user support.",
+        category="DEPLOYMENT",
+        weight=15,
+        search_terms=["monitoring", "user support", "operations", "system health", "telemetry", "alerting", "log analysis", "helpdesk", "incident management", "performance monitoring", "model monitoring"]
+    ),
+    ISO5338Check(
+        clause_id="8.1",
+        clause_ref="AI system decommissioning",
+        normative_text="AI system decommissioning.",
+        category="RETIREMENT",
+        weight=10,
+        search_terms=["decommissioning", "end of life", "sunset", "system archiving", "retirement plan", "deactivation", "shutdown", "service termination", "migration plan"]
+    ),
+    ISO5338Check(
+        clause_id="8.2",
+        clause_ref="Data disposal and model retirement",
+        normative_text="Data disposal and model retirement.",
+        category="RETIREMENT",
+        weight=10,
+        search_terms=["data disposal", "model retirement", "data deletion", "retention policy", "secure disposal", "data purge", "model archiving", "data sanitization", "cryptographic erasure"]
+    ),
+    ISO5338Check(
+        clause_id="9.1",
+        clause_ref="AI system risk management",
+        normative_text="Risk management throughout the life cycle.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["risk management", "risk assessment", "risk mitigation", "hazard analysis", "threat modeling", "vulnerability scan", "risk registry", "risk matrix", "continuous monitoring", "incident response", "contingency plan"]
+    ),
+    ISO5338Check(
+        clause_id="9.2",
+        clause_ref="AI system quality management",
+        normative_text="Quality management.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["quality management", "quality assurance", "qa", "quality control", "quality metric", "process improvement", "audit", "compliance", "standardization", "quality policy"]
+    ),
+    ISO5338Check(
+        clause_id="9.3",
+        clause_ref="AI safety assurance",
+        normative_text="Safety assurance.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["safety assurance", "safety case", "safety critical", "functional safety", "safety integrity", "safety requirement", "hazard log", "safety evidence", "safety assessment report"]
+    ),
+    ISO5338Check(
+        clause_id="9.4",
+        clause_ref="AI security management",
+        normative_text="Security management.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["security management", "information security", "cybersecurity", "security policy", "access control", "encryption", "security audit", "penetration testing", "vulnerability management", "security incident"]
+    ),
+    ISO5338Check(
+        clause_id="9.5",
+        clause_ref="AI privacy management",
+        normative_text="Privacy management.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["privacy management", "data privacy", "gdpr", "pii", "anonymization", "pseudonymization", "privacy policy", "consent management", "privacy impact assessment", "data protection"]
+    ),
+    ISO5338Check(
+        clause_id="9.6",
+        clause_ref="AI ethics management",
+        normative_text="Ethics management.",
+        category="CROSS_LIFECYCLE",
+        weight=10,
+        search_terms=["ethics management", "ai ethics", "ethical guideline", "bias mitigation", "fairness", "transparency", "accountability", "ethical review", "ethics committee", "value alignment"]
+    )
 ]
 
+def calculate_score(check: ISO5338Check, matches: int) -> Tuple[int, str, str]:
+    term_count = len(check.search_terms)
+    
+    if matches >= term_count * 0.5:
+        return int(check.weight * 1.0), "HIGH", f"Strong evidence ({matches}/{term_count} terms)"
+    elif matches >= 2:
+        return int(check.weight * 0.6), "MEDIUM", f"Partial evidence ({matches}/{term_count} terms)"
+    elif matches >= 1:
+        return int(check.weight * 0.3), "LOW", f"Weak evidence ({matches}/{term_count} terms)"
+    else:
+        return 0, "NONE", "No evidence found"
 
-PATTERNS = {
-    "ISO-5338-01": ["knowledge_acquisition", "domain_ontology", "expert_rules", "system_prompt"],
-    "ISO-5338-02": ["data_engineering", "dataset_prep", "data_pipeline", "feature_engineering"],
-    "ISO-5338-03": ["continuous_validation", "concept_drift", "data_drift", "production_monitoring"],
-    "ISO-5338-04": ["ml_pipeline", "iso_23053", "model_deployment", "pipeline_stage"],
-    "ISO-5338-05": ["ai_testing", "iso_29119", "metamorphic_testing", "model_eval"],
-    "ISO-5338-06": ["ci_cd", "github_actions", "build_verification", "automated_test"],
-}
-
-
-def scan_iso5338(root: Path, idx: IndexStoreAdapter) -> list[ISO5338Control]:
-    """Scan codebase for ISO/IEC 5338:2023 AI System Life Cycle controls."""
-    for ctrl in ISO5338_CONTROLS:
-        pats = PATTERNS.get(ctrl.control_id, [])
-        hits = set()
-
-        for pat in pats:
+def scan_repository(path: str, checks: List[ISO5338Check]):
+    idx = IndexStoreAdapter()
+    idx.rebuild(Path(path))
+    for check in checks:
+        matches_found = 0
+        for term in check.search_terms:
             try:
-                res = idx.search_code(pat, limit=3)
-                for r in res:
-                    if r.path and not any(x in r.path for x in ("node_modules", ".git", "vendor", "__pycache__")):
-                        hits.add(r.path)
+                results = idx.search_code(term, limit=5)
+                if results:
+                    matches_found += 1
+                    for res in results:
+                        file_path = res.get('file', '')
+                        if file_path and file_path not in check.evidence_files:
+                            check.evidence_files.append(file_path)
             except Exception:
                 pass
+        
+        if matches_found > 0:
+            check.found = True
+        
+        score, confidence, _ = calculate_score(check, matches_found)
+        check.confidence = confidence
 
-        ctrl.evidence_files = sorted(list(hits))[:4]
-        ctrl.found = len(ctrl.evidence_files) > 0
-
-    return ISO5338_CONTROLS
-
-
-def calculate_iso5338_score(controls: list[ISO5338Control]) -> tuple[int, str, str]:
-    """Calculate ISO 5338 AI Life Cycle Score (0-100) and Grade."""
-    score = sum(c.score_delta for c in controls if c.found)
-
-    if score >= 85:
-        grade = "A+ (ISO 5338 AI System Life Cycle Certified)"
-        status = "🟢 FULLY COMPLIANT — Production AI Engineering & Life Cycle Automation"
-    elif score >= 60:
-        grade = "A (High Life Cycle Readiness)"
-        status = "🟢 HIGH — Compliant with Minor Continuous Validation / Testing Features Missing"
-    elif score >= 40:
-        grade = "B (Moderate Life Cycle Debt)"
-        status = "🟡 MEDIUM — Requires Automated Data Engineering & Continuous Validation"
-    else:
-        grade = "C/F (Life Cycle Hazard)"
-        status = "🔴 NON-COMPLIANT — Lacks Structured AI Pipelines or CI/CD Automation"
-
-    return score, grade, status
-
-
-def print_report(project: str, root: Path, controls: list[ISO5338Control],
-                 stats: dict, elapsed: float, report_path: Path) -> None:
-    found = [c for c in controls if c.found]
-    score, grade, status = calculate_iso5338_score(controls)
-
-    lines = [
-        f"# 📊 ISO/IEC 5338:2023 AI System Life Cycle Processes Audit — {project}",
-        f"> Reference: Computer Science Review 54 (2024) 100681 · Committee: ISO/IEC JTC 1/SC 42 & SC 7",
-        f"> {root} · {stats.get('total_files', 0):,} files · {elapsed:.2f}s · {date.today()}",
-        "",
-        "## 📊 ISO 5338 AI Life Cycle Summary",
-        "",
-        f"| Metric | Value |",
-        f"|---|---|",
-        f"| **ISO 5338 AI Life Cycle Score** | **{score} / 100** |",
-        f"| **AI Life Cycle Grade** | **{grade}** |",
-        f"| **Compliance Status** | **{status}** |",
-        f"| Total Files Scanned | {stats.get('total_files', 0):,} |",
-        f"| Verified Life Cycle Processes | {len(found)} / {len(controls)} |",
-        "",
-        "## 🔍 Verified ISO/IEC 5338:2023 Normative Life Cycle Processes",
-        "",
-        "| Process Group | Control ID | Control Title | Status | Verified Code Evidence | Remediation Action |",
-        "|---|---|---|---|---|---|",
-    ]
-
-    for c in found:
-        ev = ", ".join(f"`{e}`" for e in c.evidence_files[:2])
-        lines.append(f"| `{c.process_group}` | `{c.control_id}` | {c.title} | ✅ FOUND | {ev} | {c.remediation} |")
-
-    lines += [
-        "",
-        "## 🚀 ISO/IEC 5338 AI Life Cycle Remediation Blueprint",
-        "",
-        "1. **Knowledge Acquisition**: Document domain rule acquisition and expert knowledge structures.",
-        "2. **AI Data Engineering**: Automate dataset extraction, validation, and preprocessing pipelines.",
-        "3. **Continuous Validation**: Track live model accuracy and concept drift in production environments.",
-        "4. **ML Pipeline**: Align pipeline architecture with ISO 23053 ML framework stages.",
-        "5. **AI Software Testing**: Incorporate ISO 29119-11 metamorphic testing and ML assertion suites.",
-        "6. **Automated CI/CD**: Set up automated CI/CD workflows for regression testing and build verification.",
-        "",
-        "---",
-        f"*ISO/IEC 5338:2023 AI System Life Cycle Processes Auditor · {date.today()}*",
-    ]
-
-    report_path.write_text("\n".join(lines), encoding="utf-8")
-
-    SEP = "═" * 75
-    print(f"\n{SEP}")
-    print(f"  📊 ISO/IEC 5338:2023 AI SYSTEM LIFE CYCLE AUDITOR: {project}")
-    print(SEP)
-    print(f"  Files indexed               : {stats.get('total_files', 0):,}")
-    print(f"  ISO 5338 AI Life Cycle Score: {score} / 100")
-    print(f"  AI Life Cycle Grade         : {grade}")
-    print(f"  Verified Process Controls   : {len(found)} / {len(controls)}")
-    print(f"  Audit Speed                 : {elapsed:.3f}s")
-    print(f"  Report Saved                : {report_path}")
-    print(f"{SEP}\n")
-
-
-def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python3 scratch/auditors/iso/ai/iso_5338_ai_lifecycle_audit.py /path/to/project [ProjectName]")
-        sys.exit(1)
-
-    project_path = Path(sys.argv[1]).expanduser().resolve()
-    if not project_path.exists():
-        print(f"❌ Path not found: {project_path}")
-        sys.exit(1)
-
-    project_name = sys.argv[2] if len(sys.argv) > 2 else project_path.name
-
+def print_report(checks: List[ISO5338Check], project_name: str):
     app_data = Path.home() / ".gemini" / "antigravity-cli" / "brain" / "b1a8b172-4960-462a-bad1-43d8b7e774ad"
     app_data.mkdir(parents=True, exist_ok=True)
+    
+    safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', project_name.lower())
+    report_file = app_data / f"iso_5338_{safe_name}.md"
+    
+    total_score = 0
+    max_score = sum(c.weight for c in checks)
+    
+    cat_scores = defaultdict(int)
+    cat_max = defaultdict(int)
+    
+    for c in checks:
+        if c.confidence == "HIGH": s = c.weight * 1.0
+        elif c.confidence == "MEDIUM": s = c.weight * 0.6
+        elif c.confidence == "LOW": s = c.weight * 0.3
+        else: s = 0
+        
+        total_score += s
+        cat_scores[c.category] += s
+        cat_max[c.category] += c.weight
+    
+    with open(report_file, "w") as f:
+        f.write(f"# ISO/IEC 5338 AI Lifecycle Audit Report: {project_name}\n\n")
+        
+        f.write("## Executive Summary\n")
+        f.write(f"**Total Lifecycle Score:** {int(total_score)} / {max_score}\n\n")
+        
+        f.write("## Phase Breakdown\n")
+        for cat in sorted(cat_max.keys()):
+            f.write(f"- **{cat}:** {int(cat_scores[cat])} / {cat_max[cat]}\n")
+            
+        f.write("\n## Detailed Findings\n")
+        for c in checks:
+            f.write(f"### {c.clause_id} - {c.clause_ref}\n")
+            f.write(f"- **Phase:** {c.category}\n")
+            f.write(f"- **Confidence:** {c.confidence}\n")
+            f.write(f"- **Requirement:** {c.normative_text}\n")
+            if c.evidence_files:
+                f.write("- **Evidence Files:**\n")
+                for ev in c.evidence_files[:5]:
+                    f.write(f"  - `{ev}`\n")
+            else:
+                f.write("- **Evidence Files:** None found\n")
+            f.write("\n")
+            
+        f.write("## Gap Analysis & Remediation Roadmap\n")
+        f.write("1. Review LOW and NONE confidence processes.\n")
+        f.write("2. Formalize missing lifecycle phases (e.g., retirement).\n")
+        f.write("3. Ensure data and model management practices are thoroughly documented.\n")
 
-    safe_name = re.sub(r"[^a-z0-9_]", "_", project_name.lower())
-    report_path = app_data / f"iso_5338_{safe_name}.md"
+    print(f"Report written to {report_file}")
+    print(f"ISO 5338 Total Score: {int(total_score)}/{max_score}")
 
-    t0 = time.perf_counter()
-    idx = IndexStoreAdapter()
-    stats = idx.rebuild(project_path)
-    controls = scan_iso5338(project_path, idx)
-    elapsed = time.perf_counter() - t0
-
-    print_report(project_name, project_path, controls, stats, elapsed, report_path)
-
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python iso_5338_ai_lifecycle_audit.py <repo_path> <project_name>")
+        sys.exit(1)
+        
+    repo_path = sys.argv[1]
+    project_name = sys.argv[2]
+    
+    scan_repository(repo_path, CHECKS)
+    print_report(CHECKS, project_name)
 
 if __name__ == "__main__":
     main()

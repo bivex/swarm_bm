@@ -38,6 +38,11 @@
 | 🩺 **ISO 13485 / IEC 62304** | Медицинское ПО SaMD (Проверка диапазонов датчиков, PHI лог доступа, Hazard alarm) | `scratch/auditors/iso/iso_13485_medtech_audit.py` |
 | 🌿 **ISO 14001 / Green IT** | Энергоэффективность кода (Gzip/Brotli сжатие, кэширование CPU, детекция busy loops) | `scratch/auditors/iso/iso_14001_green_code_audit.py` |
 | 📋 **ISO/IEC 19770** | Управление лицензиями ПО (SBOM генерация, детекция GPL/AGPL конфликтов, LICENSE file) | `scratch/auditors/iso/iso_19770_license_audit.py` |
+| ☁️🔒 **ISO/IEC 27018** | Приватность PII в публичных облаках (BYOK шифрование KMS, запрет ad-трекинга, residency) | `scratch/auditors/iso/iso_27018_pii_cloud_audit.py` |
+| 🏛️ **ISO/IEC 15408 / EAL** | Common Criteria EAL (Security Target specification, power-on self-test, buffer safety) | `scratch/auditors/iso/iso_15408_common_criteria_audit.py` |
+| 🏭 **ISA/IEC 62443** | Промышленная безопасность SCADA/OT (Зонирование air-gap, OPC UA/Modbus, PLC watchdogs) | `scratch/auditors/iso/iso_62443_industrial_security_audit.py` |
+| 📌 **ISO 21500** | Управление проектами и Governance (Issue templates, ADR записи в `docs/adr/`, Roadmap) | `scratch/auditors/iso/iso_21500_project_governance_audit.py` |
+| 🧪 **ISO/IEC/IEEE 29119** | Стандарты тестирования ПО (Unit test automation, fixtures `conftest.py`, Playwright E2E) | `scratch/auditors/iso/iso_29119_software_testing_audit.py` |
 
 ---
 
